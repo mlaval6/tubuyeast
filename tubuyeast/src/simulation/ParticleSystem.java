@@ -14,9 +14,9 @@ import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import numerical.BoxCollider;
 import numerical.ConjugateGradient;
 import numerical.ImplicitEuler;
-import tools.gl.OpenglViewer;
 import tools.gl.SceneGraphNode;
 import tools.parameters.BooleanParameter;
 import tools.parameters.DoubleParameter;
@@ -33,10 +33,6 @@ import com.sun.opengl.util.GLUT;
  */
 public class ParticleSystem implements SceneGraphNode {
     
-    // How far from the actual window boundary do we set a wall
-    private int wdx = 10;
-    private int wdy = 10;
-
     private ArrayList<Boundary> wall = new ArrayList<Boundary>();
 
     private ConjugateGradient cg;
@@ -66,9 +62,6 @@ public class ParticleSystem implements SceneGraphNode {
 
     private DoubleParameter rc = new DoubleParameter( "coefficient of restitution", 0.6, 0, 1 );
     
-    private BooleanParameter displayE = new BooleanParameter( "display energy", false );
-
-
     /**
      * Creates an empty particle system
      * @param bsize 
@@ -78,6 +71,7 @@ public class ParticleSystem implements SceneGraphNode {
         wsize = new Dimension(bsize);
         backwardEuler = be;
     }
+
 
     /**
      * Updates the system.
@@ -92,41 +86,9 @@ public class ParticleSystem implements SceneGraphNode {
         
         backwardEuler.step(K, B, time, h, this, (int)Math.round(numIterations.getValue()));
         
-        // Apply naive box-wall collision
-        int pindex = 0;
-        double rcv = rc.getValue();
-        for ( Particle p : particles ) {
-            
-            // If the particle is pinned, do not change its position/velocity
-            if (!p.pinned) {
-                // Check if the new position lies outside of the window
-                if (p.p.x <= 0 + wdx) {
-                    p.p.x = wdx;
-                    p.v.x = p.v.x < 0 ? -p.v.x * rcv : p.v.x;
-                }
-                
-                if (p.p.x >= wsize.width - wdx) {
-                    p.p.x = wsize.width - wdx;
-                    p.v.x = p.v.x > 0 ? -p.v.x * rcv: p.v.x;
-                }
-                
-                if (p.p.y <= wdy) {
-                    p.p.y = wdy;
-                    p.v.y = p.v.y < 0 ? -p.v.y * rcv : p.v.y;
-                }
-
-                if (p.p.y >= wsize.height - wdy) {
-                    p.p.y = wsize.height - wdy;
-                    p.v.y = p.v.y > 0 ? -p.v.y * rcv : p.v.y;
-                }
-                
-
-            }            
-
-            
-            pindex++;
-        }
-
+        // Apply simple box-wall collision
+        // TODO: implement constraints in conjugate gradient
+        BoxCollider.collide(wsize.getWidth(), wsize.getHeight(), rc.getValue(), particles);
         
         time = time + h;        
         
@@ -422,7 +384,8 @@ public class ParticleSystem implements SceneGraphNode {
         double mu = friction.getValue();
         for (Particle p : particles) {
 
-            if (p.p.y >= wsize.getHeight() - wdy - 3) {
+        	// Use some offset
+            if (p.p.y >= wsize.getHeight() - 13) {
                 sign = -1 * Math.signum(p.v.x);
                 p.addForce(new Vector2d(mu * sign * p.mass * gv, 0));
             }
@@ -504,10 +467,10 @@ public class ParticleSystem implements SceneGraphNode {
         
         // Particle box
         Point2d b1, b2, b3, b4;
-        b1 = new Point2d(wdx, wsize.height - wdy - 0);
-        b2 = new Point2d(wdx, wdy);
-        b3 = new Point2d(wsize.width - wdx, wdy);
-        b4 = new Point2d(wsize.width - wdx, wsize.height - wdy - 0);
+        b1 = new Point2d(BoxCollider.WDX, wsize.height - BoxCollider.WDY - 0);
+        b2 = new Point2d(BoxCollider.WDX, BoxCollider.WDY);
+        b3 = new Point2d(wsize.width - BoxCollider.WDX, BoxCollider.WDY);
+        b4 = new Point2d(wsize.width - BoxCollider.WDX, wsize.height - BoxCollider.WDY - 0);
         wall = ConstraintTool.createBox(b1, b2, b3, b4);
         for (Boundary b : wall) {
         	b.display(drawable);
@@ -568,7 +531,6 @@ public class ParticleSystem implements SceneGraphNode {
         
         vfp.add( friction.getSliderControls(false) );
         vfp.add( rc.getSliderControls(false) );
-        vfp.add( displayE.getControls() );
         
         setDefaultValues();
 

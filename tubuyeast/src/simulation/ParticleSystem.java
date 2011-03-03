@@ -20,6 +20,8 @@ import tools.gl.OpenglViewer;
 import tools.gl.SceneGraphNode;
 import tools.parameters.BooleanParameter;
 import tools.parameters.DoubleParameter;
+import tools.parameters.Parameter;
+import tools.parameters.ParameterListener;
 import tools.swing.VerticalFlowPanel;
 
 import com.sun.opengl.util.GLUT;
@@ -34,6 +36,8 @@ public class ParticleSystem implements SceneGraphNode {
     // How far from the actual window boundary do we set a wall
     private int wdx = 10;
     private int wdy = 10;
+
+    private ArrayList<Boundary> wall = new ArrayList<Boundary>();
 
     private ConjugateGradient cg;
 
@@ -203,8 +207,8 @@ public class ParticleSystem implements SceneGraphNode {
 
             Spring spring = new Spring(wall, p);
             spring.l0 = springl;
-            Spring.k = 100;
-            Spring.b = 10;
+            spring.setK(100);
+            spring.setB(10);
             
             particles.add(wall);
             particles.add(p);
@@ -259,8 +263,6 @@ public class ParticleSystem implements SceneGraphNode {
         for (Particle p : particles) {
             p.index = ind++;
         }
-        
-        updateInitialEnergy();
         
         int n = particles.size();
         
@@ -335,46 +337,8 @@ public class ParticleSystem implements SceneGraphNode {
         
         cg = new ConjugateGradient( particles);
         
-        // Add wall boundaries
-        cg.clearConstraints();
-
         backwardEuler.initialize(particles, cg);
         backwardEuler.update();
-    }
-
-    private ArrayList<Boundary> wall = new ArrayList<Boundary>();
-
-    /**
-     * Updates the current total energy of the system
-     */
-    private void updateInitialEnergy() {
-        totalEnergy = computeTotalEnergy();
-    }
-
-    private double totalEnergy = 0;
-    private double computeTotalEnergy() {
-        double energy = 0;
-        
-        // Computes the kinetic energy
-        for (Particle p : particles) {
-            energy += 0.5 * p.mass * p.v.lengthSquared();
-        }
-        
-        
-        // Computes the spring potential energy 1/2kx^2 (since all particles are initially at rest)
-        double stretching = 0;
-        for (Spring spring : springs) {
-            stretching = spring.getLength();
-            energy += 0.5 * spring.k * stretching * stretching;
-        }
-        
-        // Computes the gravitational potential energy (mgh)
-        double gv = g.getValue();
-        for (Particle p : particles) {
-            energy += p.mass * gv * wsize.getHeight() - p.p.y - wdy;
-        }
-        
-        return energy;
     }
 
     /**
@@ -437,10 +401,6 @@ public class ParticleSystem implements SceneGraphNode {
      * Updates the current forces
      */
     public void updateForces() {
-        // Set global spring properties
-    	// TODO: use private spring constants
-        Spring.k = k.getValue();
-        Spring.b = b.getValue();
                 
         // Initialize forces to the the gravity force (mg)
         Vector2d fg = useg.getValue() ? new Vector2d(0, g.getValue()) : new Vector2d();
@@ -471,8 +431,8 @@ public class ParticleSystem implements SceneGraphNode {
 
         // If a particle is grabbed, use soft pulling
         if (grabbed) {
-            double ks = Math.max(100, Spring.k);
-            double kd = 10;
+            double ks = Math.max(100, Spring.DEFAULT_K);
+            double kd = Spring.DEFAULT_B;
             
             Vector2d ddx = new Vector2d();
             ddx.set(grabpos.x - grabpos0.x, grabpos.y - grabpos0.y);
@@ -538,30 +498,8 @@ public class ParticleSystem implements SceneGraphNode {
     public void display(GLAutoDrawable drawable) {
         gl = drawable.getGL();
         
-        if (time <= 0.1) updateInitialEnergy();
-
-        if (displayE.getValue()) {
-        // Draws the energy
-        double ebarLength = 0.25 * wsize.getWidth();
-        double ebarHeight = 15;
-        double ebarX = 0.70 * wsize.getWidth();
-        double ebarY = 5;
-        
-        // Uses the cube of the ratio to make the energy loss more visible
-        double eratio = computeTotalEnergy() / totalEnergy;
-        eratio = eratio * eratio * eratio;
-        
-        gl.glRectd(ebarX, ebarY, ebarX + ebarLength, ebarY + ebarHeight);
-        gl.glColor3f(0, 1, 0);
-        gl.glRectd(ebarX, ebarY + 1, ebarX + ebarLength*eratio, ebarY - 1 + ebarHeight);
-        
-        gl.glColor3f(0, 0, 0);
-        OpenglViewer.printTextLines(drawable, "E = " + energyFormat.format(computeTotalEnergy()) + " / " + energyFormat.format(totalEnergy), ebarX, ebarY + ebarHeight - 2, 5, glut.BITMAP_HELVETICA_12);
-        }
-        
         // Keep track of the width and the height 
-        // of the drawable as this might be useful for 
-        // processing collisions with walls
+        // to be able to process collisions with walls
         wsize.setSize(drawable.getWidth(), drawable.getHeight());
         
         // Particle box
@@ -570,7 +508,10 @@ public class ParticleSystem implements SceneGraphNode {
         b2 = new Point2d(wdx, wdy);
         b3 = new Point2d(wsize.width - wdx, wdy);
         b4 = new Point2d(wsize.width - wdx, wsize.height - wdy - 0);
-        wall = Constraints.createBox(b1, b2, b3, b4);
+        wall = ConstraintTool.createBox(b1, b2, b3, b4);
+        for (Boundary b : wall) {
+        	b.display(drawable);
+        }
 
         for ( Particle p : particles ) {
             if ( p.heavy ) {
@@ -596,35 +537,9 @@ public class ParticleSystem implements SceneGraphNode {
         }
         gl.glEnd();
         
-        cg.display(drawable);
-        
-        for (Boundary b : wall) {
-        	b.display(drawable);
-        }
-        
         if (grabbed) {
-            drawLineToParticle(drawable, grabpos.x, grabpos.y, pgrabbed, pgrabbed.distance(grabpos.x, grabpos.y), 0, Math.min(wsize.getWidth(), wsize.getHeight())); 
+            ParticleSimulationInteractor.drawLineToParticle(drawable, grabpos.x, grabpos.y, pgrabbed, pgrabbed.distance(grabpos.x, grabpos.y), 0, Math.min(wsize.getWidth(), wsize.getHeight())); 
         }
-    }
-    
-    /**
-     * draws a line from the given point to the given particle
-     * @param drawable
-     * @param x
-     * @param y
-     * @param p
-     * @param d
-     */
-    public void drawLineToParticle( GLAutoDrawable drawable, double x, double y, Particle p, double d, double minDist, double maxDist) {
-        if ( p == null ) return;
-//        if ( d > maxDist ) return;        
-        GL gl = drawable.getGL();        
-        double col = d < minDist ? 1 : (maxDist-d) / (maxDist-minDist);
-        gl.glColor4d( 1-col,0,col,0.75f);
-        gl.glBegin(GL.GL_LINES);
-        gl.glVertex2d( x, y );
-        gl.glVertex2d( p.p.x, p.p.y );
-        gl.glEnd();    
     }
     
     public JPanel getControls() {
@@ -637,6 +552,20 @@ public class ParticleSystem implements SceneGraphNode {
         vfp.add( g.getSliderControls(true) );
         vfp.add( k.getSliderControls(true) );
         vfp.add( b.getSliderControls(false) );
+        
+        // Update spring constant when necessary
+        ParameterListener l = new ParameterListener() {
+        	@Override
+        	public void parameterChanged(Parameter parameter) {
+        		for (Spring spring : springs) {
+        			spring.setK(k.getValue());
+        			spring.setB(b.getValue());
+        		}
+        	}
+        };
+        k.addParameterListener(l);
+        b.addParameterListener(l);
+        
         vfp.add( friction.getSliderControls(false) );
         vfp.add( rc.getSliderControls(false) );
         vfp.add( displayE.getControls() );
@@ -664,10 +593,6 @@ public class ParticleSystem implements SceneGraphNode {
         rc.setValue(0.6);
     }
 
-    public void setWindowBounds(Dimension bsize) {
-//        wsize = bsize;
-    }
-
     /**
      * Used for interactivity
      */
@@ -678,14 +603,8 @@ public class ParticleSystem implements SceneGraphNode {
     private int graby = 0;
     public void grab(Particle p, int xdown, int ydown) {
         grabbed = true;
-//        grabpos.set(xdown, ydown);
         pgrabbed = p;
         p.grabbed = true;
-        
-//        pgrabbed.pinned = true;
-//        p.v.x = 0;
-//        p.v.y = 0;
-
         updateSystem();
     }
 
@@ -704,8 +623,6 @@ public class ParticleSystem implements SceneGraphNode {
     public void updateGrab(int xcurrent, int ycurrent) {
         grabpos0.set(grabpos);
         grabpos.set(xcurrent, ycurrent);
-//        pgrabbed.p.x = xcurrent;
-//        pgrabbed.p.y = ycurrent;
     }
 
 	@Override

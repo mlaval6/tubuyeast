@@ -2,7 +2,6 @@ package numerical;
 
 import java.util.ArrayList;
 
-import javax.media.opengl.GLAutoDrawable;
 import javax.vecmath.Vector2d;
 
 import no.uib.cipr.matrix.DenseMatrix;
@@ -12,7 +11,6 @@ import no.uib.cipr.matrix.Matrix;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
-import simulation.Boundary;
 import simulation.Particle;
 
 /**
@@ -88,27 +86,8 @@ public class ConjugateGradient {
      */
     private int n = 0;
         
-    private ArrayList<Boundary> bcs = new ArrayList<Boundary>();
-    
     private FlexCompRowMatrix[] Si;
     private DenseMatrix identity;
-    
-    /**
-     * Add a bilateral constraint
-     * @param bc
-     */
-    public void addConstraint(Boundary bc) {
-        bcs.add(bc);
-    }
-
-    /**
-     * Add a set of constraints
-     * @param bc
-     */
-    public void addConstraints(ArrayList<Boundary> bc) {
-        bcs.addAll(bc);
-    }
-
     
     /**
      * Creates a new conjugate gradient solver
@@ -284,25 +263,7 @@ public class ConjugateGradient {
         
         return x;
     }
-
-    /**
-     * Display the constraints
-     * @param drawable
-     */
-    public void display(GLAutoDrawable drawable) {
-        
-        for (Boundary bc : bcs) {
-            bc.display(drawable);
-        }
-    }
-
-    /**
-     * 
-     */
-    public void clearConstraints() { 
-        bcs.clear();
-    }
-
+    
     /**
      * Updates the constraints
      */
@@ -326,71 +287,6 @@ public class ConjugateGradient {
             z.set(2*i, 0);
             z.set(2*i + 1, 0);
         }
-        
-//        // Set boundary constraints
-//        double maxDistForCollision = 2;
-//        double maxTimeForCollision = 0.05;
-//        
-//        double maxDistForContact = 2;
-//        
-//        // Epsilon to prevent contact normal drifting
-//        double vEpsilon = 0.001;
-//        
-//        Vector2d N;
-//        Vector2d vN = new Vector2d();
-//        Vector2d vT = new Vector2d();
-//        Vector2d zi = new Vector2d();
-//        Vector2d df = new Vector2d();
-//        double rc = ParticleSystem.rc.getValue();
-//        double friction = ParticleSystem.friction.getValue();
-//        double g = ParticleSystem.g.getValue();
-//        double t;
-//        double vdotn;
-//        Boundary currentB;
-//        int bindex = 0;
-//        LinkedList<Boundary> toRemove = new LinkedList<Boundary>();
-//        
-//        for (Particle p : particles) {
-//            i = p.index;
-//            bindex = 0;
-//
-//            // First update the contact boundaries of that particle.
-//            p.inContact = false;
-//            for (Boundary b : p.contactBoundaries) {
-//
-//                // If the particle is still in contact.
-//                if (b.contact(p, maxDistForContact, bindex)) {
-//                    // CONTACT DETECTED
-//                    bindex++;
-//                }
-//                // If the particle is no more in contact with this boundary, remove it.
-//                else {
-//                    toRemove.add(b);
-//                    p.contactPoints.remove(bindex);
-//                    p.contactNormals.remove(bindex);
-//                }
-//            }
-//            
-//            p.contactBoundaries.removeAll(toRemove);
-//            toRemove.clear();
-//
-//            // Apply contact constraints
-//            Boundary.applyContactConstraints(p, Si, z);
-//            
-//            // Then look for collisions with all boundaries.
-//            for (Boundary bc : bcs) {
-//                
-//                // If the particle is already in contact with this boundary, skip it.
-////                if (p.contactBoundaries.contains(bc)) continue;
-//                
-//                // If a collision is detected, the particle is momentarily in contact.
-//                if (bc.collide(p, maxTimeForCollision, maxDistForCollision)) {
-//                    // COLLISION DETECTED
-//                    if (!p.inContact)
-//                        Boundary.applyCollisionConstraint(p, bc, Si, z);
-//                }
-//            }
-//        }
     }
 
 }

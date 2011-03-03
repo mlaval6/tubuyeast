@@ -17,11 +17,21 @@ public class Spring {
     /**
      * All springs share the same stiffness coefficient
      */
-    static double k = 1;
+    public static double DEFAULT_K = 1;
     /**
      * All springs share the same camping coefficient
      */
-    static double b = 1;
+    public static double DEFAULT_B = 1;
+    
+    /**
+     * Spring stiffness.
+     */
+    private double k;
+    
+    /**
+     * Spring damping.
+     */
+    private double b;
     
     /**
      * Rest length
@@ -40,8 +50,41 @@ public class Spring {
         computeRestLength();
         p1.springs.add(this);
         p2.springs.add(this);
+        
+        k = DEFAULT_K;
+        b = DEFAULT_B;
     }
     
+    /**
+     * Set the stiffness constant for this spring.
+     * @param k
+     */
+    public void setK(double k) {
+    	this.k = k;
+    }
+    
+    /**
+     * @return the stiffness constant of this spring.
+     */
+    public double getK() {
+    	return k;
+    }
+    
+    /**
+     * Set the damping constant for this spring.
+     * @param b
+     */
+    public void setB(double b) {
+    	this.b = b;
+    }
+    
+    /**
+     * @return the damping constant of this spring.
+     */
+    public double getB() {
+    	return b;
+    }
+ 
     /**
      * Computes the rest length of the connected particles
      */

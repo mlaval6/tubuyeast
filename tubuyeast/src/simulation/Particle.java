@@ -15,12 +15,12 @@ public class Particle {
     /**
      * Default heavy mass
      */
-    static final double massHeavy = 1000;
+    static final double MassHeavy = 10;
     
     /**
      * Default normal mass
      */
-    static final double massNormal= 1;
+    static final double MassNormal= 1;
 
     /**
      * If this particle is pinned.
@@ -40,7 +40,7 @@ public class Particle {
     /**
      * This particle's mass.
      */
-    public double mass = massNormal;
+    public double mass = MassNormal;
 
     /**
      * This particle's position.

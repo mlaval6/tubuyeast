@@ -10,6 +10,7 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 
 /**
+ * Class representing a line boundary.
  * @author piuze
  */
 public class Boundary {
@@ -56,6 +57,7 @@ public class Boundary {
     private Vector2d tmpV = new Vector2d();
 
     /**
+     * Build a boundary connecting two pointst.
      * @param e1 Boundary point 1.
      * @param e2 Boundary point 2.
      */

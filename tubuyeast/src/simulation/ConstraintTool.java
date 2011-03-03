@@ -7,7 +7,7 @@ import javax.vecmath.Point2d;
 /**
  * @author piuze
  */
-public class Constraints {
+public class ConstraintTool {
 
     static ArrayList<Boundary> createCircle(Point2d p, double size, double resolution) {
         

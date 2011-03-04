@@ -10,9 +10,9 @@ import java.util.List;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
+import javax.vecmath.Point2d;
 
 import tools.gl.Interactor;
-import tools.parameters.BooleanParameter;
 
 public class ParticleSimulationInteractor implements Interactor {
 
@@ -66,6 +66,8 @@ public class ParticleSimulationInteractor implements Interactor {
             }      
         }
     }  
+    
+    private Point2d dummyPt = new Point2d();
 
     public void attach(Component component) {
         component.addMouseMotionListener( new MouseMotionListener() {
@@ -85,7 +87,8 @@ public class ParticleSimulationInteractor implements Interactor {
                         }
                     }
                     
-                    system.updateGrab(xcurrent, ycurrent);
+                    dummyPt.set(xcurrent, ycurrent);
+                    system.grab(p1, dummyPt);
 
                 } else {
                     findCloseParticles(xcurrent, ycurrent);
@@ -130,8 +133,8 @@ public class ParticleSimulationInteractor implements Interactor {
                 if ( p1 != null && d1 < grabThresh ) {
                     grabbed = true;
                     
-                    system.grab(p1, xdown, ydown);
-                    system.updateGrab(xcurrent, ycurrent);
+                    dummyPt.set(xdown, ydown);
+                    system.grab(p1, dummyPt);
                 }
             }
             

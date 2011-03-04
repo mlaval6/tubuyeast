@@ -44,15 +44,17 @@ public class Spring {
      * @param p1
      * @param p2
      */
-    public Spring( Particle p1, Particle p2 ) {
+    public Spring(Particle p1, Particle p2, double k, double b) {
         this.p1 = p1;
         this.p2 = p2;
         computeRestLength();
         p1.springs.add(this);
         p2.springs.add(this);
-        
-        k = DEFAULT_K;
-        b = DEFAULT_B;
+
+        this.k = k;
+        this.b = b;
+//        k = DEFAULT_K;
+//        b = DEFAULT_B;
     }
     
     /**

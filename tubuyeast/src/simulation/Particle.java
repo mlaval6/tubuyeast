@@ -15,7 +15,7 @@ public class Particle {
     /**
      * Default heavy mass
      */
-    static final double MassHeavy = 10;
+    static final double MassHeavy = 15;
     
     /**
      * Default normal mass

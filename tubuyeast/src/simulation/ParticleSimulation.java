@@ -7,12 +7,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.vecmath.Point2d;
+import javax.vecmath.Vector2d;
 
 import numerical.ImplicitEuler;
 import tools.computations.FPSTimer;
@@ -48,7 +52,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
     
     private ImplicitEuler backwardEuler = new ImplicitEuler();
 
-    private Dimension winsize = new Dimension(800, 600);
+    private static Dimension winsize = new Dimension(800, 600);
 
     private ParticleSimulationInteractor interactor;
 
@@ -67,7 +71,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
      */
     public ParticleSimulation() {
         system = new ParticleSystem(winsize, backwardEuler);
-        system.createSystem(1);
+        createSystem(system, 1);
         
         ev = new OpenglViewer( "Spring Madness", this, new Dimension(winsize), new Dimension(600, winsize.height + 90) );
 
@@ -154,7 +158,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
             cb.addActionListener( new ActionListener() {
                 
                 public void actionPerformed(ActionEvent e) {
-                    system.createSystem(si);
+                    createSystem(system, si);
                 }
             });
         }
@@ -193,6 +197,163 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
             }
         } );
     }
+    
+	/**
+	 * Creates test systems.
+	 * @param system
+	 * @param which
+	 */
+	private static void createSystem(ParticleSystem system, int which) {
+		List<Particle> particles = system.getParticles();
+		List<Spring> springs = system.getSprings();
+		double k = system.getK();
+		double b = system.getB();
+		
+		Particle p1, p2, p3, p4;
+		int N;
+			
+		switch (which) {
+		case 1:
+			Point2d p = new Point2d(100, 100);
+			Vector2d d = new Vector2d(20, 0);
+			p1 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
+			particles.add(p1);
+			p2 = new Particle(p.x + d.y, p.y - d.x, 0, 0);
+			particles.add(p2);
+			springs.add(new Spring(p1, p2, k, b));
+			p1.pinned = true;
+			p2.pinned = true;
+			p.add(d);
+			p.add(d);
+			N = 10;
+			for (int i = 1; i < N; i++) {
+				p3 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
+				p4 = new Particle(p.x + d.y, p.y - d.x, 0, 0);
+				particles.add(p3);
+				particles.add(p4);
+				springs.add(new Spring(p3, p1, k, b));
+				springs.add(new Spring(p3, p2, k, b));
+				springs.add(new Spring(p4, p1, k, b));
+				springs.add(new Spring(p4, p2, k, b));
+				springs.add(new Spring(p4, p3, k, b));
+				p1 = p3;
+				p2 = p4;
+
+				p.add(d);
+				p.add(d);
+			}
+			break;
+			case 2:
+				p = new Point2d(100, 100);
+				d = new Vector2d(20, 0);
+				p1 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
+				particles.add(p1);
+				p2 = new Particle(p.x + d.y, p.y - d.x, 0, 0);
+				particles.add(p2);
+				springs.add(new Spring(p1, p2, k, b));
+				p1.pinned = true;
+				p2.pinned = true;
+				p.add(d);
+				p.add(d);
+				N = 10;
+				for (int i = 1; i < N; i++) {
+					 d.set( 20*Math.cos(i*Math.PI/N), 20*Math.sin(i*Math.PI/N) );
+					p3 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
+					p4 = new Particle(p.x + d.y, p.y - d.x, 0, 0);
+					particles.add(p3);
+					particles.add(p4);
+					springs.add(new Spring(p3, p1, k, b));
+					springs.add(new Spring(p3, p2, k, b));
+					springs.add(new Spring(p4, p1, k, b));
+					springs.add(new Spring(p4, p2, k, b));
+					springs.add(new Spring(p4, p3, k, b));
+					p1 = p3;
+					p2 = p4;
+
+					p.add(d);
+					p.add(d);
+				}
+				break;
+			case 3:
+				int ypos = 100;
+				p1 = new Particle(320, ypos, 0, 0);
+				p1.pinned = true;
+				particles.add(p1);
+				N = 10;
+				for (int i = 0; i < N; i++) {
+					ypos += 20;
+					p2 = new Particle(320, ypos, 0, 0);
+					particles.add(p2);
+					springs.add(new Spring(p1, p2, k, b));
+					p1 = p2;
+				}
+				break;
+			case 4:
+				double springl = 100;
+				double x1 = (int) (winsize.width / 2.0);
+				double y1 = (int) (winsize.height / 2.0);
+
+				double x2 = (int) (winsize.width / 2.0) + springl + 0.01;
+				double y2 = (int) (winsize.height / 2.0);
+
+				Particle wall;
+				wall = new Particle(x1, y1, 0, 0);
+				wall.pinned = true;
+
+				p1 = new Particle(x2, y2, 0, 0);
+
+				Spring spring = new Spring(wall, p1, k, b);
+				spring.l0 = springl;
+				spring.setK(100);
+				spring.setB(10);
+
+				particles.add(wall);
+				particles.add(p1);
+				springs.add(spring);
+				break;
+			case 5:
+				int x0 = (int) (winsize.width / 2.0);
+				int y0 = (int) (winsize.height / 2.0);
+				double r = 100;
+				List<Particle> bps = new LinkedList<Particle>();
+
+				Particle pi, pn, po;
+				pi = new Particle(x0 + r * Math.cos(0), y0 + r * Math.sin(0), 0, 0);
+				bps.add(pi);
+				po = pi;
+
+				double dt = 2 * Math.PI / 8;
+				for (double angle = dt; angle < 2 * Math.PI; angle += dt) {
+
+					pn = new Particle(x0 + r * Math.cos(angle), y0 + r
+							* Math.sin(angle), 0, 0);
+
+					// springs.add( new Spring(po, pn));
+					
+					if (angle >= Math.PI + dt) {
+						pn.heavy = true;
+					}
+
+					bps.add(pn);
+
+					po = pn;
+				}
+				springs.add(new Spring(pi, po, k, b));
+
+				for (Particle p1l : bps) {
+					for (Particle p2l : bps) {
+						if (p1l != p2l)
+							springs.add(new Spring(p1l, p2l, k, b));
+					}
+				}
+
+				particles.addAll(bps);
+
+				break;
+		}
+
+		system.updateSystem();
+	}
     
     public void setRunning(boolean b) {
     	run.setValue(b);

@@ -65,9 +65,8 @@ public class ParticleSystem implements SceneGraphNode {
 			"coefficient of restitution", 0.6, 0, 1);
 
 	/**
-	 * Creates an empty particle system
-	 * 
-	 * @param bsize
+	 * Create an empty particle system
+	 * @param bsize the dimension of the box in which this system lives.
 	 * @param be
 	 */
 	public ParticleSystem(Dimension bsize, ImplicitEuler be) {
@@ -87,7 +86,7 @@ public class ParticleSystem implements SceneGraphNode {
 
 		computeStiffnessMatrix();
 
-		backwardEuler.step(K, B, time, h, this, (int) Math.round(numIterations
+		backwardEuler.step(K, B, time, h, (int) Math.round(numIterations
 				.getValue()));
 
 		// Apply simple box-wall collision
@@ -97,134 +96,6 @@ public class ParticleSystem implements SceneGraphNode {
 
 		time = time + h;
 
-	}
-
-	/**
-	 * Creates one of a number of simple test systems.
-	 * 
-	 * @param which
-	 */
-	public void createSystem(int which) {
-		Particle p1, p2, p3, p4;
-		int N;
-			
-		switch (which) {
-		case 1:
-			Point2d p = new Point2d(100, 100);
-			Vector2d d = new Vector2d(20, 0);
-			p1 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
-			particles.add(p1);
-			p2 = new Particle(p.x + d.y, p.y - d.x, 0, 0);
-			particles.add(p2);
-			springs.add(new Spring(p1, p2, k.getValue(), b.getValue()));
-			p1.pinned = true;
-			p2.pinned = true;
-			p.add(d);
-			p.add(d);
-			N = 10;
-			for (int i = 1; i < N; i++) {
-				// d.set( 20*Math.cos(i*Math.PI/N), 20*Math.sin(i*Math.PI/N) );
-				p3 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
-				p4 = new Particle(p.x + d.y, p.y - d.x, 0, 0);
-				particles.add(p3);
-				particles.add(p4);
-				springs.add(new Spring(p3, p1, k.getValue(), b.getValue()));
-				springs.add(new Spring(p3, p2, k.getValue(), b.getValue()));
-				springs.add(new Spring(p4, p1, k.getValue(), b.getValue()));
-				springs.add(new Spring(p4, p2, k.getValue(), b.getValue()));
-				springs.add(new Spring(p4, p3, k.getValue(), b.getValue()));
-				p1 = p3;
-				p2 = p4;
-
-				p.add(d);
-				p.add(d);
-			}
-			break;
-			case 2:
-				p1 = new Particle(320, 100, 0, 0);
-				p2 = new Particle(320, 200, 0, 0);
-				particles.add(p1);
-				particles.add(p2);
-				p1.pinned = true;
-				springs.add(new Spring(p1, p2, k.getValue(), b.getValue()));
-				break;
-			case 3:
-				int ypos = 100;
-				p1 = new Particle(320, ypos, 0, 0);
-				p1.pinned = true;
-				particles.add(p1);
-				N = 10;
-				for (int i = 0; i < N; i++) {
-					ypos += 20;
-					p2 = new Particle(320, ypos, 0, 0);
-					particles.add(p2);
-					springs.add(new Spring(p1, p2, k.getValue(), b.getValue()));
-					p1 = p2;
-				}
-				break;
-			case 4:
-				double springl = 100;
-
-				double x1 = (int) (wsize.width / 2.0);
-				double y1 = (int) (wsize.height / 2.0);
-
-				double x2 = (int) (wsize.width / 2.0) + springl + 0.01;
-				double y2 = (int) (wsize.height / 2.0);
-
-				Particle wall;
-				wall = new Particle(x1, y1, 0, 0);
-				wall.pinned = true;
-
-				p1 = new Particle(x2, y2, 0, 0);
-
-				Spring spring = new Spring(wall, p1, k.getValue(), b.getValue());
-				spring.l0 = springl;
-				spring.setK(100);
-				spring.setB(10);
-
-				particles.add(wall);
-				particles.add(p1);
-				springs.add(spring);
-				break;
-			case 5:
-				int x0 = (int) (wsize.width / 2.0);
-				int y0 = (int) (wsize.height / 2.0);
-				double r = 100;
-				List<Particle> bps = new LinkedList<Particle>();
-
-				Particle pi, pn, po;
-				pi = new Particle(x0 + r * Math.cos(0), y0 + r * Math.sin(0), 0, 0);
-				bps.add(pi);
-				po = pi;
-
-				double dt = 2 * Math.PI / 8;
-				for (double angle = dt; angle < 2 * Math.PI; angle += dt) {
-
-					pn = new Particle(x0 + r * Math.cos(angle), y0 + r
-							* Math.sin(angle), 0, 0);
-
-					// springs.add( new Spring(po, pn));
-
-					bps.add(pn);
-
-					po = pn;
-				}
-				springs.add(new Spring(pi, po, k.getValue(), b.getValue()));
-
-				for (Particle p1l : bps) {
-					for (Particle p2l : bps) {
-						if (p1l != p2l)
-							springs.add(new Spring(p1l, p2l, k.getValue(), b
-									.getValue()));
-					}
-				}
-
-				particles.addAll(bps);
-
-				break;
-		}
-
-		updateSystem();
 	}
 
 	/**
@@ -318,8 +189,7 @@ public class ParticleSystem implements SceneGraphNode {
 
 		cg = new ConjugateGradient(particles);
 
-		backwardEuler.initialize(particles, cg);
-		backwardEuler.update();
+		backwardEuler.initialize(this);
 	}
 
 	/**
@@ -507,7 +377,7 @@ public class ParticleSystem implements SceneGraphNode {
 
 		for (Particle p : particles) {
 			if (p.heavy) {
-				gl.glPointSize(15);
+				gl.glPointSize(25);
 			} else {
 				gl.glPointSize(10);
 			}
@@ -619,6 +489,24 @@ public class ParticleSystem implements SceneGraphNode {
 	@Override
 	public String getName() {
 		return "Particle System";
+	}
+
+	public List<Spring> getSprings() {
+		return springs;
+	}
+
+	/**
+	 * @return the default spring stiffness constant.
+	 */
+	public double getK() {
+		return k.getValue();
+	}
+
+	/**
+	 * @return the default spring damping constant.
+	 */
+	public double getB() {
+		return b.getValue();
 	}
 
 }

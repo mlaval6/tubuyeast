@@ -1,6 +1,7 @@
 package numerical;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.vecmath.Vector2d;
 
@@ -10,18 +11,19 @@ import no.uib.cipr.matrix.Matrices;
 import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
+import simulation.IntegrationMethod;
 import simulation.Particle;
 import simulation.ParticleSystem;
 
 /**
  * @author epiuze
  */
-public class ImplicitEuler {
+public class ImplicitEuler implements IntegrationMethod {
 
     /**
      * The list of particles in the system;
      */
-    private ArrayList<Particle> particles = new ArrayList<Particle>();
+    private List<Particle> particles = new LinkedList<Particle>();
 
     private ConjugateGradient cg;
     private FlexCompRowMatrix A;
@@ -34,12 +36,12 @@ public class ImplicitEuler {
      * @param particleList
      * @param cg 
      */
-    public void initialize(ArrayList<Particle> particleList, ConjugateGradient cg) {
-        particles = particleList;
+    public void initialize(ParticleSystem ps) {
+        particles = ps.getParticles();
         
         initMatrices();
 
-        this.cg = cg;
+        cg = new ConjugateGradient(particles);
         
         updateConstraints();
     }
@@ -94,10 +96,9 @@ public class ImplicitEuler {
      * @param B 
      * @param t
      * @param h
-     * @param ps
      * @param cs
      */
-    public void step(CompRowMatrix K, CompRowMatrix B, double t, double h, ParticleSystem ps, int numIterations) {
+    public void step(CompRowMatrix K, CompRowMatrix B, double t, double h, int numIterations) {
         
         // (W - h^2*K - h*B) dv = hf0 + h^2*K*v0)
         K.scale(h*h);
@@ -157,15 +158,6 @@ public class ImplicitEuler {
           p.p.x += h * p.v.x;
           p.p.y += h * p.v.y;
       }
-    }
-
-    /**
-     * If there is anything to be updated in the internal structure.
-     */
-    public void update() {
-        initMatrices();
-
-        updateConstraints();
     }
 
 }

@@ -18,7 +18,6 @@ import javax.swing.JPanel;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 
-import numerical.ImplicitEuler;
 import tools.computations.FPSTimer;
 import tools.gl.Interactor;
 import tools.gl.OpenglViewer;

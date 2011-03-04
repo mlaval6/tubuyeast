@@ -25,6 +25,7 @@ import tools.gl.OpenglViewer;
 import tools.gl.SceneGraphNode;
 import tools.parameters.BooleanParameter;
 import tools.parameters.DoubleParameter;
+import tools.parameters.IntParameter;
 import tools.swing.VerticalFlowPanel;
 
 
@@ -46,12 +47,10 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
         
     private BooleanParameter run = new BooleanParameter( "run", false );
     
-    private DoubleParameter stepsize = new DoubleParameter( "step size", 0.05, 1e-5, 1 );
+    private DoubleParameter stepsize = new DoubleParameter( "step size", 0.01, 1e-5, 1 );
     
-    private DoubleParameter substeps = new DoubleParameter( "sub steps (integer)", 1, 1, 100);
+    private IntParameter substeps = new IntParameter( "sub steps (integer)", 10, 1, 100);
     
-    private ImplicitEuler backwardEuler = new ImplicitEuler();
-
     private static Dimension winsize = new Dimension(800, 600);
 
     private ParticleSimulationInteractor interactor;
@@ -70,10 +69,10 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
      * Creates the application / scene instance
      */
     public ParticleSimulation() {
-        system = new ParticleSystem(winsize, backwardEuler);
+        system = new ParticleSystem(winsize);
         createSystem(system, 1);
         
-        ev = new OpenglViewer( "Spring Madness", this, new Dimension(winsize), new Dimension(600, winsize.height + 90) );
+        ev = new OpenglViewer("Tubuyeast", this, new Dimension(winsize), new Dimension(650, winsize.height + 90) );
 
         // Add an interactor to manage mouse and keyboard controls
         interactor = new ParticleSimulationInteractor(system);
@@ -135,7 +134,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
     	// if it is running or wants to be stepped
         if ( isRunning() || stepRequested ) {   
             for ( int i = 0; i < substeps.getValue(); i++ ) {
-                system.step( stepsize.getValue() / (int)substeps.getValue() );                
+                system.step( stepsize.getValue());                
             }
             stepRequested = false;        
         }
@@ -167,7 +166,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
         
         vfp.add( run.getControls() );        
         vfp.add( stepsize.getSliderControls(true) );
-        vfp.add( substeps.getSliderControls(false) );
+        vfp.add( substeps.getSliderControls() );
         vfp.add( system.getControls() );
         return vfp.getPanel();
     }

@@ -12,23 +12,27 @@ import javax.swing.JPanel;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 
-import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import numerical.BoxCollider;
-import numerical.ConjugateGradient;
+import numerical.ForwardEuler;
 import numerical.ImplicitEuler;
+import numerical.RungeKutta;
 import tools.gl.SceneGraphNode;
-import tools.parameters.BooleanParameter;
 import tools.parameters.DoubleParameter;
+import tools.parameters.IntParameter;
 import tools.parameters.Parameter;
 import tools.parameters.ParameterListener;
+import tools.swing.ListComboBox;
 import tools.swing.VerticalFlowPanel;
 
 /**
- * Implementation of a particle system. Manages system integration calls and particle grabbing.
+ * Implementation of a particle system. Manages system integration calls and
+ * particle grabbing.
  * 
  * @author epiuze
  */
 public class ParticleSystem implements SceneGraphNode {
+
+	private List<Integrator> integrationMethods;
 
 	private ArrayList<Boundary> wall = new ArrayList<Boundary>();
 
@@ -41,18 +45,16 @@ public class ParticleSystem implements SceneGraphNode {
 
 	private Dimension wsize;
 
-	private BooleanParameter useg = new BooleanParameter("use gravity", true);
-
 	public static DoubleParameter g = new DoubleParameter("gravity", 9.8, -100,
 			100);
 
 	private DoubleParameter k = new DoubleParameter("stiffness", 100, 0.001,
 			100000);
 
-	private DoubleParameter b = new DoubleParameter("damping", 0, 0, 100);
+	private DoubleParameter b = new DoubleParameter("damping", 0.3, 0, 100);
 
-	private DoubleParameter numIterations = new DoubleParameter("iterations",
-			5, 1, 1000);
+	private IntParameter numIterations = new IntParameter("iterations", 5, 1,
+			1000);
 
 	public static DoubleParameter friction = new DoubleParameter(
 			"floor friction", 0.3, 0, 2);
@@ -60,14 +62,27 @@ public class ParticleSystem implements SceneGraphNode {
 	private DoubleParameter rc = new DoubleParameter(
 			"coefficient of restitution", 0.6, 0, 1);
 
+	private ListComboBox<Integrator> integrationMethodsComboBox;
+
 	/**
 	 * Create an empty particle system
-	 * @param bsize the dimension of the box in which this system lives.
+	 * 
+	 * @param bsize
+	 *            the dimension of the box in which this system lives.
 	 * @param be
 	 */
-	public ParticleSystem(Dimension bsize, ImplicitEuler be) {
+	public ParticleSystem(Dimension bsize) {
 		wsize = new Dimension(bsize);
-		integrationMethod = be;
+
+		integrationMethods = new ArrayList<Integrator>();
+		integrationMethods.add(new ImplicitEuler());
+		integrationMethods.add(new ForwardEuler());
+		integrationMethods.add(new RungeKutta());
+
+		integrationMethod = integrationMethods.get(0);
+
+		integrationMethodsComboBox = new ListComboBox<Integrator>(
+				integrationMethods);
 	}
 
 	/**
@@ -80,8 +95,7 @@ public class ParticleSystem implements SceneGraphNode {
 		// Integrates the system
 		updateForces();
 
-		integrationMethod.step(time, h, (int) Math.round(numIterations
-				.getValue()));
+		integrationMethod.step(time, h, numIterations.getValue());
 
 		// Apply simple box-wall collision
 		// TODO: implement constraints in conjugate gradient
@@ -104,7 +118,9 @@ public class ParticleSystem implements SceneGraphNode {
 			p.index = ind++;
 		}
 
-		integrationMethod.initialize(this);
+		for (Integrator i : integrationMethods) {
+			i.initialize(this);
+		}
 	}
 
 	/**
@@ -152,7 +168,7 @@ public class ParticleSystem implements SceneGraphNode {
 	/**
 	 * The integrator
 	 */
-	public IntegrationMethod integrationMethod = null;
+	public Integrator integrationMethod = null;
 
 	/**
 	 * Updates the current forces
@@ -160,7 +176,7 @@ public class ParticleSystem implements SceneGraphNode {
 	public void updateForces() {
 
 		// Initialize forces to the the gravity force (mg)
-		Vector2d fg = useg.getValue() ? new Vector2d(0, g.getValue())
+		Vector2d fg = g.isChecked() ? new Vector2d(0, g.getValue())
 				: new Vector2d();
 		for (Particle p : particles) {
 			p.f.set(fg);
@@ -186,6 +202,7 @@ public class ParticleSystem implements SceneGraphNode {
 				p.addForce(new Vector2d(mu * sign * p.mass * gv, 0));
 			}
 
+			// System.out.println(p.index + ": " + p.f);
 		}
 
 		// If a particle is grabbed, use soft pulling
@@ -280,9 +297,17 @@ public class ParticleSystem implements SceneGraphNode {
 		vfp.setBorder(BorderFactory.createTitledBorder(BorderFactory
 				.createEtchedBorder(), "Particle system"));
 
-		vfp.add(numIterations.getSliderControls(true));
-		vfp.add(useg.getControls());
-		vfp.add(g.getSliderControls(true));
+		vfp.add(integrationMethodsComboBox.getControls());
+		integrationMethodsComboBox
+				.addParameterListener(new ParameterListener() {
+					@Override
+					public void parameterChanged(Parameter parameter) {
+						integrationMethod = (Integrator) integrationMethodsComboBox.getSelected();
+					}
+				});
+
+		vfp.add(numIterations.getSliderControls());
+		vfp.add(g.getSliderControlsExtended("use"));
 		vfp.add(k.getSliderControls(true));
 		vfp.add(b.getSliderControls(false));
 
@@ -301,7 +326,7 @@ public class ParticleSystem implements SceneGraphNode {
 
 		vfp.add(friction.getSliderControls(false));
 		vfp.add(rc.getSliderControls(false));
-		
+
 		return vfp.getPanel();
 	}
 
@@ -324,7 +349,7 @@ public class ParticleSystem implements SceneGraphNode {
 
 		grabpos.set(pos);
 	}
-	
+
 	public void ungrab() {
 
 		if (pgrabbed == null)

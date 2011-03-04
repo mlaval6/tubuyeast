@@ -10,9 +10,10 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrices;
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.Matrix.Norm;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
-import simulation.IntegrationMethod;
+import simulation.Integrator;
 import simulation.Particle;
 import simulation.ParticleSystem;
 import simulation.Spring;
@@ -20,39 +21,39 @@ import simulation.Spring;
 /**
  * @author epiuze
  */
-public class ImplicitEuler implements IntegrationMethod {
+public class ImplicitEuler implements Integrator {
 
-    /**
-     * The list of particles in the system;
-     */
-    ParticleSystem system;
-    
-    private ConjugateGradient cg;
-    private FlexCompRowMatrix A;
-    private FlexCompRowMatrix Ad;
-    private DenseMatrix M, W;
-    private DenseVector b, dv;
-    private DenseVector f0, v0;
+	/**
+	 * The list of particles in the system;
+	 */
+	private ParticleSystem system;
+
+	private ConjugateGradient cg;
+	private FlexCompRowMatrix A;
+	private FlexCompRowMatrix Ad;
+	private DenseMatrix M, W;
+	private DenseVector b, dv;
+	private DenseVector f0, v0;
 
 	private CompRowMatrix K, B;
 
-    /**
-     * @param particleList
-     * @param cg 
-     */
-    public void initialize(ParticleSystem ps) {
-    	system = ps;
-    	
-    	buildK();
-        
-        initMatrices();
+	/**
+	 * @param particleList
+	 * @param cg
+	 */
+	public void initialize(ParticleSystem ps) {
+		system = ps;
 
-        cg = new ConjugateGradient(system.getParticles());
-        
-        updateConstraints();
-    }
-    
-    private void buildK() {
+		buildK();
+
+		initMatrices();
+
+		cg = new ConjugateGradient(system.getParticles());
+
+		updateConstraints();
+	}
+
+	private void buildK() {
 		int n = system.getParticles().size();
 
 		// Builds the stiffness matrix using the fact that some
@@ -128,41 +129,42 @@ public class ImplicitEuler implements IntegrationMethod {
 
 		K = new CompRowMatrix(2 * n, 2 * n, nz);
 		B = new CompRowMatrix(2 * n, 2 * n, nz);
-    }
-    
-    private void initMatrices() {
-        
-        int dim = 2 * system.getParticles().size();
+	}
 
-        // Find M and M^-1
-        M = new DenseMatrix(dim, dim);
-        for (Particle p : system.getParticles()) {
-            M.set(2 * p.index + 0, 2 * p.index + 0, p.mass);
-            M.set(2 * p.index + 1, 2 * p.index + 1, p.mass);
-        }
-        
-        DenseMatrix I = Matrices.identity(M.numColumns());
-        W = new DenseMatrix(dim, dim);
-        M.solve(I, W);
+	private void initMatrices() {
 
-        // Force
-        f0 = new DenseVector(dim);
-        
-        // Velocity
-        v0 = new DenseVector(dim);
-        
-        A = new FlexCompRowMatrix(dim, dim);
+		int dim = 2 * system.getParticles().size();
 
-        b = new DenseVector(dim);
+		// Find M and M^-1
+		M = new DenseMatrix(dim, dim);
+		for (Particle p : system.getParticles()) {
+			M.set(2 * p.index + 0, 2 * p.index + 0, p.mass);
+			M.set(2 * p.index + 1, 2 * p.index + 1, p.mass);
+		}
 
-        // Initializes the solver
-        // Add a convergence monitor
-        // Allocate storage for Conjugate Gradients
-        dv = new DenseVector(dim);
-        
-        cF = new DenseVector(2 * system.getParticles().size());
-    }
- 
+		// TODO: use pseudo
+		DenseMatrix I = Matrices.identity(M.numColumns());
+		W = new DenseMatrix(dim, dim);
+		M.solve(I, W);
+
+		// Force
+		f0 = new DenseVector(dim);
+
+		// Velocity
+		v0 = new DenseVector(dim);
+
+		A = new FlexCompRowMatrix(dim, dim);
+
+		b = new DenseVector(dim);
+
+		// Initializes the solver
+		// Add a convergence monitor
+		// Allocate storage for Conjugate Gradients
+		dv = new DenseVector(dim);
+
+		cF = new DenseVector(2 * system.getParticles().size());
+	}
+
 	private void computeStiffnessMatrix() {
 		// Reset stiffness and damping matrices
 		K.zero();
@@ -172,87 +174,88 @@ public class ImplicitEuler implements IntegrationMethod {
 		}
 	}
 
-    /**
-     * Updates velocity constraints
-     */
-    public void updateConstraints() {
-        cg.updateSystem();
-    }
+	/**
+	 * Updates velocity constraints
+	 */
+	public void updateConstraints() {
+		cg.updateSystem();
+	}
 
-    /**
-     * Constraint forces to apply after solving the CG
-     */
-    private Vector cF;
-    /**
-     * Backward Euler integration step
-     * @param K
-     * @param B 
-     * @param t
-     * @param h
-     * @param cs
-     */
-    public void step(double t, double h, int numIterations) {
-        
-    	computeStiffnessMatrix();
-    	
-        // (W - h^2*K - h*B) dv = hf0 + h^2*K*v0)
-        K.scale(h*h);
-        B.scale(h);
-        
-        // W - h^2*K - h*B
-        A.zero();
-        A.add(K);
-        A.add(B);
-        A.scale(-1);
-        A.add(M);
-        
-        int i = 0;
-        for (Particle p : system.getParticles()) {
-            i = p.index;
+	/**
+	 * Constraint forces to apply after solving the CG
+	 */
+	private Vector cF;
 
-            // Set f0
-            f0.set(2*p.index, p.f.x + cF.get(2*p.index));
-            f0.set(2*p.index + 1, p.f.y + cF.get(2*p.index + 1));
+	/**
+	 * Backward Euler integration step
+	 * 
+	 * @param K
+	 * @param B
+	 * @param t
+	 * @param h
+	 * @param cs
+	 */
+	public void step(double t, double h, int numIterations) {
 
-            // Set v0
-            v0.set(2*p.index, p.v.x);
-            v0.set(2*p.index + 1, p.v.y);
-        }
-        
-        //h(f0 + h*K*v0)
-        K.mult(v0, b);
-        f0.scale(h);
-        b.add(f0);
+		computeStiffnessMatrix();
 
-        // Update constraints
-        // and add contact forces
-        // e.g. friction
-        cg.updateSystem();
+		// (W - h^2*K - h*B) dv = hf0 + h^2*K*v0)
+		K.scale(h * h);
+		B.scale(h);
 
-        cF = cg.solve(A, b, dv, numIterations);
-      
-        // Prevent drifting by cutting down normal component if small
-        double vdotn;
-        Vector2d vT = new Vector2d();
-        Vector2d vN = new Vector2d();
-        Vector2d dP = new Vector2d();
+		// W - h^2*K - h*B
+		A.zero();
+		A.add(K);
+		A.add(B);
+		A.scale(-1);
+		A.add(M);
 
-        // Updates the positions
-        for (Particle p : system.getParticles()) {
-            
-            p.v.x += dv.get(2 * p.index + 0);
-            p.v.y += dv.get(2 * p.index + 1);
-            
-            // Innocent until proven guilty
-            p.illegal = false;
-            
-        }
+		int i = 0;
+		for (Particle p : system.getParticles()) {
+			i = p.index;
 
-      // Updates position
-      for (Particle p : system.getParticles()) {
-          p.p.x += h * p.v.x;
-          p.p.y += h * p.v.y;
-      }
-    }
+			// Set f0
+			f0.set(2 * p.index, p.f.x + cF.get(2 * p.index));
+			f0.set(2 * p.index + 1, p.f.y + cF.get(2 * p.index + 1));
+
+			// Set v0
+			v0.set(2 * p.index, p.v.x);
+			v0.set(2 * p.index + 1, p.v.y);
+		}
+
+		// h(f0 + h*K*v0)
+		K.mult(v0, b);
+		f0.scale(h);
+		b.add(f0);
+
+		// Update constraints
+		// and add contact forces
+		// e.g. friction
+		cg.updateSystem();
+
+		cF = cg.solve(A, b, dv, numIterations);
+
+		// Updates the positions
+		for (Particle p : system.getParticles()) {
+
+			p.v.x += dv.get(2 * p.index + 0);
+			p.v.y += dv.get(2 * p.index + 1);
+
+			// Innocent until proven guilty
+			p.illegal = false;
+
+		}
+
+		// Updates position
+		for (Particle p : system.getParticles()) {
+			p.p.x += h * p.v.x;
+			p.p.y += h * p.v.y;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "Implicit Euler";
+	}
 
 }

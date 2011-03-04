@@ -3,11 +3,16 @@ package simulation;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 /**
- * Interface for methods integrating Newton's equations of motion.
+ * Interface for numerical integration methods.
  * @author epiuze
  *
  */
-public interface IntegrationMethod {
+public interface Integrator {
+	
+	/**
+	 * Initialize the integration method with this particle system.
+	 * @param ps
+	 */
 	public abstract void initialize(ParticleSystem ps);
 	
 	/**
@@ -21,5 +26,10 @@ public interface IntegrationMethod {
 	 * @param numIterations
 	 */
     public abstract void step(double t, double h, int numIterations);
+    
+    /**
+     * @return the name of this method.
+     */
+    public abstract String toString();
 
 }

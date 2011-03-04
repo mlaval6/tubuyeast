@@ -114,15 +114,6 @@ public class Spring {
         double rv = fd.dot(v);
         fd.scale(b*rv);
 
-//        if (!p1.grabbed && !p2.grabbed) {
-//            p1.addForce(fs);
-//            p1.addForce(fd);
-//            fs.scale(-1);
-//            p2.addForce(fs);
-//            
-//            fd.scale(-1);
-//            p2.addForce(fd);        
-//        }
         p1.addForce(fs);
         p1.addForce(fd);
 

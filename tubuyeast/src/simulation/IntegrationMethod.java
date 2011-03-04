@@ -20,6 +20,6 @@ public interface IntegrationMethod {
 	 * @param h step size
 	 * @param numIterations
 	 */
-    public abstract void step(CompRowMatrix K, CompRowMatrix B, double t, double h, int numIterations);
+    public abstract void step(double t, double h, int numIterations);
 
 }

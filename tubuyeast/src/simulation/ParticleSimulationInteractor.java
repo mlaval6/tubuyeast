@@ -11,6 +11,7 @@ import java.util.List;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.vecmath.Point2d;
+import javax.vecmath.Vector2d;
 
 import tools.gl.Interactor;
 
@@ -195,9 +196,6 @@ public class ParticleSimulationInteractor implements Interactor {
                     system.clearParticles();
                     p1 = null;
                     p2 = null;
-                } else if ( e.getKeyCode() == KeyEvent.VK_V ) {                   
-                    // Sets all values to default
-                    system.setDefaultValues();
                 }
             }
         } );
@@ -278,4 +276,50 @@ public class ParticleSimulationInteractor implements Interactor {
         gl.glEnd();    
     }
     
+	/**
+	 * Apply a soft pulling force on a particle.
+	 * @param p the particle to pull
+	 * @param pt0 the initial position of grab
+	 * @param pt the pulling location
+	 */
+	public static void softPull(Particle p, Point2d pt0, Point2d pt) {
+		if (p != null) {
+			// Find the strongest spring attached to this particle
+			double ks = 0;
+			double kd = 0;
+			for (Spring s : p.springs) {
+				if (s.getK() > ks) ks = s.getK();
+				if (s.getB() > kd) kd = s.getB();
+			}
+			
+			// Make pulling force stronger than max stiffness found
+			ks *= 2;
+			
+			// Don't use damping. Remove this to use max damping found
+			kd = 0;
+			
+			Vector2d ddx = new Vector2d();
+			ddx.set(pt.x - pt0.x, pt.y - pt0.y);
+			ddx.scale(0.5);
+
+			Vector2d force = new Vector2d();
+
+			// Spring
+			force.sub(pt, p.p);
+			double l = force.length();
+			force.normalize();
+			force.scale((l) * ks);
+			p.addForce(force);
+			force.scale(-1);
+
+			// Damping
+			force.sub(pt, p.p);
+			force.normalize();
+			Vector2d v = new Vector2d();
+			v.sub(ddx, p.v);
+			double rv = force.dot(v);
+			force.scale(kd * rv);
+			p.addForce(force);
+		}
+	}
 }

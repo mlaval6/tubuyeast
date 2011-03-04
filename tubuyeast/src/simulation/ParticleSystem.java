@@ -32,8 +32,6 @@ public class ParticleSystem implements SceneGraphNode {
 
 	private ArrayList<Boundary> wall = new ArrayList<Boundary>();
 
-	private ConjugateGradient cg;
-
 	/**
 	 * List of particles in the system.
 	 */
@@ -42,8 +40,6 @@ public class ParticleSystem implements SceneGraphNode {
 	private List<Spring> springs = new LinkedList<Spring>();
 
 	private Dimension wsize;
-
-	private CompRowMatrix K, B;
 
 	private BooleanParameter useg = new BooleanParameter("use gravity", true);
 
@@ -71,7 +67,7 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public ParticleSystem(Dimension bsize, ImplicitEuler be) {
 		wsize = new Dimension(bsize);
-		backwardEuler = be;
+		integrationMethod = be;
 	}
 
 	/**
@@ -84,9 +80,7 @@ public class ParticleSystem implements SceneGraphNode {
 		// Integrates the system
 		updateForces();
 
-		computeStiffnessMatrix();
-
-		backwardEuler.step(K, B, time, h, (int) Math.round(numIterations
+		integrationMethod.step(time, h, (int) Math.round(numIterations
 				.getValue()));
 
 		// Apply simple box-wall collision
@@ -110,86 +104,7 @@ public class ParticleSystem implements SceneGraphNode {
 			p.index = ind++;
 		}
 
-		int n = particles.size();
-
-		// Builds the stiffness matrix using the fact that some
-		// particles are never in contact such that some columns are always zero
-		// TODO: if other kinds of interacting forces (e.g. gravitational,
-		// electrical) were to be added
-		// the shape of this matrix would need to be reconsidered.
-		int p1, p2;
-		ArrayList<ArrayList<Integer>> connections = new ArrayList<ArrayList<Integer>>(
-				n);
-		for (@SuppressWarnings("unused")
-		Particle pa : particles) {
-			connections.add(new ArrayList<Integer>());
-		}
-
-		for (Spring s : springs) {
-			p1 = s.p1.index;
-			p2 = s.p2.index;
-
-			connections.get(p1).add(p2);
-			connections.get(p2).add(p1);
-
-		}
-
-		// nz Goal: for each row (three per particle), add column index if it's
-		// used
-
-		int[][] nz = new int[2 * n][];
-
-		int it = 0;
-
-		// For each particle (row)
-		for (int j = 0; j < n; j++) {
-
-			// Three rows per particle
-			// The number of columns used is 2 * the number of particles
-			// connected
-			// + the column for the gradient by its own position
-			nz[2 * j + 0] = new int[2 * (connections.get(j).size() + 1)];
-			nz[2 * j + 1] = new int[2 * (connections.get(j).size() + 1)];
-
-			// Set the diagonal (each particle interacts with at least one
-			// other)
-			// this makes up the first three non-empty elements of each 2 rows
-			// for this particle
-			for (int d = 0; d < 2; d++) {
-				nz[2 * j + 0][d] = 2 * j + d;
-				nz[2 * j + 1][d] = 2 * j + d;
-
-			}
-			// We already have 2 values in each row
-			it = 2;
-
-			for (Integer index : connections.get(j)) {
-				// Adds the contribution of this connection to the non-empty
-				// elements for these 2 rows
-				// 2 columns are added per row for this connection
-				for (int d = 0; d < 2; d++) {
-					nz[2 * j + 0][it] = 2 * index + d;
-					nz[2 * j + 1][it] = 2 * index + d;
-
-					it++;
-				}
-			}
-		}
-
-		// Mass and inverse mass matrices
-		int[][] nz2 = new int[2 * n][2];
-		// The matrix is diagonal -> only set a(i,i)
-		for (int i = 0; i < n; i++) {
-			nz2[2 * i + 0][0] = 2 * i + 0;
-			nz2[2 * i + 1][0] = 2 * i + 1;
-		}
-
-		K = new CompRowMatrix(2 * n, 2 * n, nz);
-		B = new CompRowMatrix(2 * n, 2 * n, nz);
-
-		cg = new ConjugateGradient(particles);
-
-		backwardEuler.initialize(this);
+		integrationMethod.initialize(this);
 	}
 
 	/**
@@ -237,16 +152,7 @@ public class ParticleSystem implements SceneGraphNode {
 	/**
 	 * The integrator
 	 */
-	public ImplicitEuler backwardEuler = null;
-
-	private void computeStiffnessMatrix() {
-		// Reset stiffness and damping matrices
-		K.zero();
-		B.zero();
-		for (Spring s : springs) {
-			s.gradient(K, B);
-		}
-	}
+	public IntegrationMethod integrationMethod = null;
 
 	/**
 	 * Updates the current forces
@@ -283,44 +189,7 @@ public class ParticleSystem implements SceneGraphNode {
 		}
 
 		// If a particle is grabbed, use soft pulling
-		if (pgrabbed != null) {
-			// Find the maximum spring attached to this particle
-			double ks = 0;
-			double kd = 0;
-			for (Spring s : pgrabbed.springs) {
-				if (s.getK() > ks) ks = s.getK();
-				if (s.getB() > kd) kd = s.getB();
-			}
-			
-			// Make pulling force stronger than max stiffness found
-			ks *= 2;
-			
-			// Don't use damping. Remove this to use max damping found
-			kd = 0;
-			
-			Vector2d ddx = new Vector2d();
-			ddx.set(grabpos.x - grabpos0.x, grabpos.y - grabpos0.y);
-			ddx.scale(0.5);
-
-			Vector2d force = new Vector2d();
-
-			// Spring
-			force.sub(grabpos, pgrabbed.p);
-			double l = force.length();
-			force.normalize();
-			force.scale((l) * ks);
-			pgrabbed.addForce(force);
-			force.scale(-1);
-
-			// Damping
-			force.sub(grabpos, pgrabbed.p);
-			force.normalize();
-			Vector2d v = new Vector2d();
-			v.sub(ddx, pgrabbed.v);
-			double rv = force.dot(v);
-			force.scale(kd * rv);
-			pgrabbed.addForce(force);
-		}
+		ParticleSimulationInteractor.softPull(pgrabbed, grabpos0, grabpos);
 
 	}
 
@@ -421,7 +290,10 @@ public class ParticleSystem implements SceneGraphNode {
 		ParameterListener l = new ParameterListener() {
 			@Override
 			public void parameterChanged(Parameter parameter) {
-				updateSprings();
+				for (Spring spring : springs) {
+					spring.setK(k.getValue());
+					spring.setB(b.getValue());
+				}
 			}
 		};
 		k.addParameterListener(l);
@@ -429,20 +301,8 @@ public class ParticleSystem implements SceneGraphNode {
 
 		vfp.add(friction.getSliderControls(false));
 		vfp.add(rc.getSliderControls(false));
-
-		setDefaultValues();
-
+		
 		return vfp.getPanel();
-	}
-
-	/**
-	 * Update all springs to use the UI-defined stiffness/damping constants.
-	 */
-	protected void updateSprings() {
-		for (Spring spring : springs) {
-			spring.setK(k.getValue());
-			spring.setB(b.getValue());
-		}
 	}
 
 	public String toString() {
@@ -451,18 +311,9 @@ public class ParticleSystem implements SceneGraphNode {
 				+ "\n" + "damping = " + b.getValue() + "\n" + "time = " + time;
 	}
 
-	public void setDefaultValues() {
-		useg.setValue(true);
-		g.setValue(9.8);
-		k.setValue(100);
-		b.setValue(0);
-		friction.setValue(0.5);
-		rc.setValue(0.6);
-	}
-
 	private Particle pgrabbed = null;
-	private Vector2d grabpos = new Vector2d();
-	private Vector2d grabpos0 = new Vector2d();
+	private Point2d grabpos = new Point2d();
+	private Point2d grabpos0 = new Point2d();
 
 	public void grab(Particle p, Point2d pos) {
 		if (pgrabbed == null) {
@@ -473,10 +324,7 @@ public class ParticleSystem implements SceneGraphNode {
 
 		grabpos.set(pos);
 	}
-
-	/**
-     * 
-     */
+	
 	public void ungrab() {
 
 		if (pgrabbed == null)

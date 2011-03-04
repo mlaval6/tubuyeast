@@ -11,8 +11,8 @@ import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
  */
 public class Spring {
 
-    Particle p1 = null;
-    Particle p2 = null;
+    public Particle p1 = null;
+    public Particle p2 = null;
     
     /**
      * All springs share the same stiffness coefficient

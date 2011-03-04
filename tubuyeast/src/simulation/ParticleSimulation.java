@@ -213,7 +213,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
 		int N;
 			
 		switch (which) {
-		case 1:
+		case 1: // structural beam
 			Point2d p = new Point2d(100, 100);
 			Vector2d d = new Vector2d(20, 0);
 			p1 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
@@ -243,7 +243,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
 				p.add(d);
 			}
 			break;
-			case 2:
+			case 2: // curved structural beam
 				p = new Point2d(100, 100);
 				d = new Vector2d(20, 0);
 				p1 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
@@ -274,7 +274,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
 					p.add(d);
 				}
 				break;
-			case 3:
+			case 3: // chain
 				int ypos = 100;
 				p1 = new Particle(320, ypos, 0, 0);
 				p1.pinned = true;
@@ -288,7 +288,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
 					p1 = p2;
 				}
 				break;
-			case 4:
+			case 4: // pendulum
 				double springl = 100;
 				double x1 = (int) (winsize.width / 2.0);
 				double y1 = (int) (winsize.height / 2.0);
@@ -311,7 +311,7 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
 				particles.add(p1);
 				springs.add(spring);
 				break;
-			case 5:
+			case 5: // ball
 				int x0 = (int) (winsize.width / 2.0);
 				int y0 = (int) (winsize.height / 2.0);
 				double r = 100;

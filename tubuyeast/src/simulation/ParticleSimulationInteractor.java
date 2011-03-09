@@ -10,10 +10,16 @@ import java.util.List;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
 import javax.vecmath.Point2d;
+import javax.vecmath.Point3d;
 import javax.vecmath.Vector2d;
 
+import tools.computations.Contour;
 import tools.gl.Interactor;
+import tools.parameters.IntParameter;
+import tools.swing.VerticalFlowPanel;
 
 public class ParticleSimulationInteractor implements Interactor {
 
@@ -32,6 +38,7 @@ public class ParticleSimulationInteractor implements Interactor {
     private boolean mouseDown = false;
     private boolean shiftDown = false;
     private boolean controlDown = false;
+    private boolean altDown = false;
     private boolean mouseInWindow = false;
     private boolean grabbed = false;
 
@@ -39,10 +46,30 @@ public class ParticleSimulationInteractor implements Interactor {
     private Particle p2 = null;
     private double d1 = 0;
     private double d2 = 0;
+    
+    private Contour contour;
+    
+    private IntParameter pointsres = new IntParameter("draw res", 30,
+            1, 1000);
+
 
     private ParticleSystem system;
     public ParticleSimulationInteractor(ParticleSystem system) {
     	this.system = system;
+    	
+    	contour = new Contour();
+    }
+    
+    public JPanel getControls() {
+        VerticalFlowPanel vfp = new VerticalFlowPanel();
+
+        vfp.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Simulation"));
+
+        vfp.add(contour.getControls());
+        vfp.add(pointsres.getSliderControls());
+        
+        return vfp.getPanel();
     }
     
     /**
@@ -74,8 +101,12 @@ public class ParticleSimulationInteractor implements Interactor {
         component.addMouseMotionListener( new MouseMotionListener() {
             
             public void mouseDragged(MouseEvent e) {
+                Point2d downPt = new Point2d(xdown, ydown);
+                
                 xcurrent = e.getPoint().x;
                 ycurrent = e.getPoint().y;
+                dummyPt.set(xcurrent, ycurrent);
+                
                 if ( grabbed ) {
                     if (! softPulling) {
                         p1.p.set(xcurrent, ycurrent);
@@ -88,11 +119,24 @@ public class ParticleSimulationInteractor implements Interactor {
                         }
                     }
                     
-                    dummyPt.set(xcurrent, ycurrent);
                     system.grab(p1, dummyPt);
 
                 } else {
-                    findCloseParticles(xcurrent, ycurrent);
+                	if (shiftDown && altDown) {
+                		Point3d lpt = contour.getLastPoint();
+                		if (lpt == null) {
+                        	contour.addPoint(new Point3d(xcurrent, ycurrent, 0));
+                		}
+                		else {
+                    		Point2d lastpt = new Point2d(lpt.x, lpt.y);
+                            if (dummyPt.distance(lastpt) >= pointsres.getValue()) {
+                            	contour.addPoint(new Point3d(xcurrent, ycurrent, 0));
+                            }
+                		}
+                	}
+                	else {
+                        findCloseParticles(xcurrent, ycurrent);
+                	}
                 }
             }
             
@@ -129,22 +173,32 @@ public class ParticleSimulationInteractor implements Interactor {
                 mouseDown = true;
                 controlDown = e.isControlDown();
                 shiftDown = e.isShiftDown();
+                altDown = e.isAltDown();
                 
-                findCloseParticles(xcurrent, ycurrent);
-                if ( p1 != null && d1 < grabThresh ) {
-                    grabbed = true;
-                    
-                    dummyPt.set(xdown, ydown);
-                    system.grab(p1, dummyPt);
+                boolean leftClick = (e.getButton() == MouseEvent.BUTTON1);
+                
+                if (leftClick) {
+                	findCloseParticles(xcurrent, ycurrent);
+                	if ( p1 != null && d1 < grabThresh ) {
+                		grabbed = true;
+                		
+                		dummyPt.set(xdown, ydown);
+                		system.grab(p1, dummyPt);
+                	}
+                }
+                else {
+                	createContour();
                 }
             }
             
             public void mouseReleased(MouseEvent e) {
-                mouseDown = false;
-                controlDown = false;
-                shiftDown = false;
+                boolean leftClick = (e.getButton() == MouseEvent.BUTTON1);
 
-                if (! grabbed && ! softPulling) {
+                if (!leftClick || (shiftDown && altDown)) {
+                	// Creating contour, do nothing
+                	return;
+                }
+                else if (! grabbed && ! softPulling) {
                     double x = e.getPoint().x;
                     double y = e.getPoint().y;
                     Particle p = system.createParticle( x, y, 0, 0 );
@@ -155,7 +209,7 @@ public class ParticleSimulationInteractor implements Interactor {
                         system.createSpring( p, p2 );
                     }  
                     // Keeps the particle pinned if shift is down on mouse release
-                    p.pinned = e.isShiftDown();
+                    p.pinned = shiftDown;
 
                     if (e.isShiftDown())
                     	p.pinned = true;
@@ -163,7 +217,7 @@ public class ParticleSimulationInteractor implements Interactor {
                     // Make the particle heavy if control is pressed
                     if (e.isControlDown()) {
                     	p.mass = Particle.MassHeavy;
-                        p.heavy = e.isControlDown();
+                        p.heavy = controlDown;
                     }
                     
                     if (e.isAltDown()) {
@@ -184,6 +238,11 @@ public class ParticleSimulationInteractor implements Interactor {
                     system.ungrab();
                 }
                 grabbed = false;
+                
+                mouseDown = false;
+                controlDown = false;
+                shiftDown = false;
+                altDown = false;
             }
         } );
         component.addKeyListener( new KeyAdapter() {
@@ -200,13 +259,29 @@ public class ParticleSimulationInteractor implements Interactor {
             }
         } );
     }
+    
+    private void createContour() {
+        if (contour.getSpline().size() > 0) {
+            // Generate contour particles
+            // skip the first and last ones to avoid overlap
+            for (Point3d pt : contour.getSpline()) {
+                system.createParticle(pt.x, pt.y, 0, 0);
+            }
+            contour.clear();
+        }
+    }
 
     public void display(GLAutoDrawable drawable) {
     	GL gl = drawable.getGL();
     	
+    	contour.display(drawable);
+    	
         // Display some extra stuff for the interface        
         if ( mouseDown ) {
-            if ( ! grabbed ) {
+        	if (shiftDown && altDown) {
+        		// Do nothing, we are creating a contour
+        	}
+        	else if ( ! grabbed) {
                 if (!softPulling) {
                     gl.glPointSize(5f);
                     gl.glLineWidth(2f);                                
@@ -293,13 +368,15 @@ public class ParticleSimulationInteractor implements Interactor {
 			}
 			
 			// Make pulling force stronger than max stiffness found
-			ks *= 2;
+//			ks *= 0.5;
+			ks = 1;
 			
 			// Don't use damping. Remove this to use max damping found
 			kd = 0;
 			
 			Vector2d ddx = new Vector2d();
-			ddx.set(pt.x - pt0.x, pt.y - pt0.y);
+			ddx.sub(pt, pt0);
+//			ddx.set(pt.x - pt0.x, pt.y - pt0.y);
 			ddx.scale(0.5);
 
 			Vector2d force = new Vector2d();

@@ -1,5 +1,6 @@
-package simulation;
+package numerical;
 
+import simulation.ParticleSystem;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 /**

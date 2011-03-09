@@ -2,7 +2,6 @@ package numerical;
 
 import java.util.List;
 
-import simulation.Integrator;
 import simulation.Particle;
 import simulation.ParticleSystem;
 

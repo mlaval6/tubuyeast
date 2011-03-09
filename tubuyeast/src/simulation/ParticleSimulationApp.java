@@ -17,7 +17,6 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
-
 import tools.computations.FPSTimer;
 import tools.gl.Interactor;
 import tools.gl.OpenglViewer;
@@ -32,7 +31,7 @@ import tools.swing.VerticalFlowPanel;
  * Sample code for particle simulation.
  * @author epiuze
  */
-public class ParticleSimulation implements SceneGraphNode, Interactor  {
+public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 
     private OpenglViewer ev;
     
@@ -61,20 +60,21 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
      * @param args
      */
     public static void main(String[] args) {
-        new ParticleSimulation();        
+        new ParticleSimulationApp();        
     }
         
     /**
      * Creates the application / scene instance
      */
-    public ParticleSimulation() {
+    public ParticleSimulationApp() {
         system = new ParticleSystem(winsize);
         createSystem(system, 1);
-        
-        ev = new OpenglViewer("Tubuyeast", this, new Dimension(winsize), new Dimension(650, winsize.height + 90) );
 
         // Add an interactor to manage mouse and keyboard controls
         interactor = new ParticleSimulationInteractor(system);
+        
+        ev = new OpenglViewer("Tubuyeast", this, new Dimension(winsize), new Dimension(650, winsize.height + 90) );
+
         ev.addInteractor(interactor);
         ev.addInteractor(this);
         
@@ -167,6 +167,8 @@ public class ParticleSimulation implements SceneGraphNode, Interactor  {
         vfp.add( stepsize.getSliderControls(true) );
         vfp.add( substeps.getSliderControls() );
         vfp.add( system.getControls() );
+        
+        vfp.add(interactor.getControls());
         return vfp.getPanel();
     }
     

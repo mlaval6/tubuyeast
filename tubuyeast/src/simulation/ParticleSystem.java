@@ -15,7 +15,10 @@ import javax.vecmath.Vector2d;
 import numerical.BoxCollider;
 import numerical.ForwardEuler;
 import numerical.ImplicitEuler;
+import numerical.Integrator;
 import numerical.RungeKutta;
+import numerical.VelocityIndependentVerlet;
+import numerical.VelocityVerlet;
 import tools.gl.SceneGraphNode;
 import tools.parameters.DoubleParameter;
 import tools.parameters.IntParameter;
@@ -78,11 +81,16 @@ public class ParticleSystem implements SceneGraphNode {
 		integrationMethods.add(new ImplicitEuler());
 		integrationMethods.add(new ForwardEuler());
 		integrationMethods.add(new RungeKutta());
-
-		integrationMethod = integrationMethods.get(0);
+		integrationMethods.add(new VelocityIndependentVerlet());
+		integrationMethods.add(new VelocityVerlet());
 
 		integrationMethodsComboBox = new ListComboBox<Integrator>(
 				integrationMethods);
+		
+		int method = 3;
+		integrationMethodsComboBox.setSelected(method);
+		integrationMethod = integrationMethods.get(method);
+
 	}
 
 	/**
@@ -332,7 +340,7 @@ public class ParticleSystem implements SceneGraphNode {
 
 	public String toString() {
 		return "particles = " + particles.size() + "\n" + "integrator = "
-				+ "Implicit Euler" + "\n" + "stiffness = " + k.getValue()
+				+ integrationMethod.toString() + "\n" + "stiffness = " + k.getValue()
 				+ "\n" + "damping = " + b.getValue() + "\n" + "time = " + time;
 	}
 

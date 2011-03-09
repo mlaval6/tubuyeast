@@ -13,7 +13,6 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.Matrix.Norm;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
-import simulation.Integrator;
 import simulation.Particle;
 import simulation.ParticleSystem;
 import simulation.Spring;

@@ -1,6 +1,5 @@
 package numerical;
 
-import simulation.Integrator;
 import simulation.Particle;
 import simulation.ParticleSystem;
 
@@ -9,7 +8,7 @@ public class RungeKutta implements Integrator {
 	private ParticleSystem system;
 
 	public String toString() {
-		return "RK4";
+		return "RK4 (buggy)";
 	}
 
 	@Override

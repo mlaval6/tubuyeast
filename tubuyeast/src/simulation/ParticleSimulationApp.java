@@ -357,7 +357,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
     
     public void setRunning(boolean b) {
     	run.setValue(b);
-    	interactor.setModifiable(b);
+    	interactor.setCreationEnabled(!b);
     }
     
     public boolean isRunning() {

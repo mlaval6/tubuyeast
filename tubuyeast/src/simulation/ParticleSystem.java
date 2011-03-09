@@ -51,6 +51,9 @@ public class ParticleSystem implements SceneGraphNode {
 	public static DoubleParameter g = new DoubleParameter("gravity", 9.8, -100,
 			100);
 
+	private IntParameter q = new IntParameter("Coulomb charge multiple", 0, -1000,
+			1000);
+
 	private DoubleParameter k = new DoubleParameter("stiffness", 100, 0.001,
 			100000);
 
@@ -124,6 +127,7 @@ public class ParticleSystem implements SceneGraphNode {
 		int ind = 0;
 		for (Particle p : particles) {
 			p.index = ind++;
+			p.q = q.getValue();
 		}
 
 		for (Integrator i : integrationMethods) {
@@ -196,6 +200,14 @@ public class ParticleSystem implements SceneGraphNode {
 		for (Spring spring : springs) {
 			spring.apply();
 		}
+		
+		for (Particle p1: particles) {
+			for (Particle p2: particles) {
+				if (p1 == p2) continue;
+				
+				CoulombForce.apply(p1, p2);
+			}
+		}
 
 		// Adds friction force for the floor
 		// F = mu * N where N = mg
@@ -229,6 +241,7 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public Particle createParticle(double x, double y, double vx, double vy) {
 		Particle p = new Particle(x, y, vx, vy);
+		p.q = q.getValue();
 		particles.add(p);
 		return p;
 	}
@@ -316,11 +329,12 @@ public class ParticleSystem implements SceneGraphNode {
 
 		vfp.add(numIterations.getSliderControls());
 		vfp.add(g.getSliderControlsExtended("use"));
-		vfp.add(k.getSliderControls(true));
-		vfp.add(b.getSliderControls(false));
+		vfp.add(q.getSliderControls());
+		vfp.add(k.getSliderControls());
+		vfp.add(b.getSliderControls());
 
 		// Update spring constant when necessary
-		ParameterListener l = new ParameterListener() {
+		ParameterListener springl = new ParameterListener() {
 			@Override
 			public void parameterChanged(Parameter parameter) {
 				for (Spring spring : springs) {
@@ -329,8 +343,19 @@ public class ParticleSystem implements SceneGraphNode {
 				}
 			}
 		};
-		k.addParameterListener(l);
-		b.addParameterListener(l);
+		k.addParameterListener(springl);
+		b.addParameterListener(springl);
+
+		// Update electrical constant when necessary
+		ParameterListener el = new ParameterListener() {
+			@Override
+			public void parameterChanged(Parameter parameter) {
+				for (Particle p : particles) {
+					p.q = q.getValue();
+				}
+			}
+		};
+		q.addParameterListener(el);
 
 		vfp.add(friction.getSliderControls(false));
 		vfp.add(rc.getSliderControls(false));

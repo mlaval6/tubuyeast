@@ -27,6 +27,7 @@ public class ParticleSimulationInteractor implements Interactor {
 	 * Use soft pulling during simulation and hard pulling otherwise.
 	 */
 	private boolean softPulling = false;
+	private boolean pindown = false;
 	
     private double maxDist = 150;
     private double minDist = 50;
@@ -112,10 +113,13 @@ public class ParticleSimulationInteractor implements Interactor {
                         p1.p.set(xcurrent, ycurrent);
                         p1.v.set(0, 0); 
 
-                        p1.p0.set( p1.p );
-                        p1.v0.set( p1.v );
-                        for ( Spring s : p1.springs ) {
-                            s.computeRestLength();
+//                        p1.p0.set( p1.p );
+//                        p1.v0.set( p1.v );
+                        
+                        if (creationEnabled) {
+                            for ( Spring s : p1.springs ) {
+                                s.computeRestLength();
+                            }
                         }
                     }
                     
@@ -182,6 +186,10 @@ public class ParticleSimulationInteractor implements Interactor {
                 	if ( p1 != null && d1 < grabThresh ) {
                 		grabbed = true;
                 		
+                		pindown = p1.pinned;
+                		
+                		p1.pinned = true;
+                		
                 		dummyPt.set(xdown, ydown);
                 		system.grab(p1, dummyPt);
                 	}
@@ -198,7 +206,7 @@ public class ParticleSimulationInteractor implements Interactor {
                 	// Creating contour, do nothing
                 	return;
                 }
-                else if (! grabbed && ! softPulling) {
+                else if (! grabbed && ! softPulling && creationEnabled) {
                     double x = e.getPoint().x;
                     double y = e.getPoint().y;
                     Particle p = system.createParticle( x, y, 0, 0 );
@@ -213,6 +221,8 @@ public class ParticleSimulationInteractor implements Interactor {
 
                     if (e.isShiftDown())
                     	p.pinned = true;
+                    else 
+                    	p.pinned = false;
                     
                     // Make the particle heavy if control is pressed
                     if (e.isControlDown()) {
@@ -226,9 +236,15 @@ public class ParticleSimulationInteractor implements Interactor {
                         p.heavy = false;
                     }
                 } else {
-                    // Keeps the particle pinned if shift is down on mouse release
                     if ( p1 != null ) {
-                        p1.pinned = e.isShiftDown();
+//                    	if (pindown) {
+//                    		p1.pinned = true;
+//                    	}
+//                    	else {
+                            // Keep the particle pinned if shift is down on mouse release
+                            p1.pinned = e.isShiftDown();
+//                    	}
+                    	
                         if (p1.pinned) p1.v.set(0, 0);
 
                         p1.mass = e.isControlDown() ? Particle.MassHeavy : Particle.MassNormal;
@@ -282,13 +298,11 @@ public class ParticleSimulationInteractor implements Interactor {
         		// Do nothing, we are creating a contour
         	}
         	else if ( ! grabbed) {
-                if (!softPulling) {
+                if (creationEnabled) {
                     gl.glPointSize(5f);
                     gl.glLineWidth(2f);                                
-                    if (! softPulling) {
                         drawLineToParticle( drawable, xcurrent, ycurrent, p1, d1, minDist, maxDist);
                         drawLineToParticle( drawable, xcurrent, ycurrent, p2, d2, minDist, maxDist);
-                    }
                 }
             } else {
                 gl.glPointSize( 15f );
@@ -326,7 +340,7 @@ public class ParticleSimulationInteractor implements Interactor {
         }
     }
 
-    public void setModifiable(boolean b) {
+    public void setSoftPulling(boolean b) {
     	softPulling = b;
     }
     
@@ -398,5 +412,10 @@ public class ParticleSimulationInteractor implements Interactor {
 			force.scale(kd * rv);
 			p.addForce(force);
 		}
+	}
+
+	private boolean creationEnabled = true;
+	public void setCreationEnabled(boolean b) {
+		creationEnabled = b;		
 	}
 }

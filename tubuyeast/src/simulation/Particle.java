@@ -1,5 +1,6 @@
 package simulation;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -10,9 +11,14 @@ import javax.vecmath.Vector2d;
 /**
  * @author epiuze
  */
-public class Particle {
+public class Particle implements Serializable {
     
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8743485463526287977L;
+
+	/**
      * Default heavy mass
      */
     static final double MassHeavy = 15;
@@ -60,13 +66,19 @@ public class Particle {
     /**
      * This particle's initial velocity.
      */
-    Vector2d v0 = new Vector2d();
+    public Vector2d v0 = new Vector2d();
 
     /**
      * The accumulated force on this particle.
      */
     public Vector2d f = new Vector2d();
     
+    /**
+     * The Coulomb charge of this particle, as a multiple of e, the electron charge.
+     * i.e. q = 1 means that the charge is a single electron.
+     */
+	public double q;
+
     /**
      * A list of springs to which this particle is attached
      * (currently unused, but perhaps of future use)

@@ -32,7 +32,7 @@ public class Spring {
      * Spring damping.
      */
     private double b;
-    
+
     /**
      * Rest length
      */

@@ -189,7 +189,7 @@ public class IntParameter extends Parameter implements PropertyChangeListener, C
         // Create the ui components
         JLabel label = new JLabel( getName() );
         
-        slider = new JSlider(SwingConstants.HORIZONTAL, 0, getMaximum(), 0);
+        slider = new JSlider(SwingConstants.HORIZONTAL, getMinimum(), getMaximum(), getDefaultValue());
         
         textField = new JFormattedTextField( DEFAULT_INTEGER_NUMBER_FORMAT );
         
@@ -267,7 +267,7 @@ public class IntParameter extends Parameter implements PropertyChangeListener, C
         if ( panel != null ) return panel;
         // Create the ui components
         JLabel label = new JLabel( getName() );
-        slider = new JSlider(SwingConstants.HORIZONTAL, 0, getMaximum(), 0);
+        slider = new JSlider(SwingConstants.HORIZONTAL, getMinimum(), getMaximum(), getDefaultValue());
         textField = new JFormattedTextField( DEFAULT_INTEGER_NUMBER_FORMAT );
         
         textField.setText( "" + value );
@@ -414,36 +414,7 @@ public class IntParameter extends Parameter implements PropertyChangeListener, C
     	setBlocking(true);
     	
         int ivalue = slider.getValue();
-//        int sliderRange = slider.getMaximum() - slider.getMinimum();
-//        double min = getMinimum();
-//        double max = getMaximum();
-//        double v;
-//        if (isLogarithmic) {
-//            min = Math.log(min);
-//            max = Math.log(max);
-//        }
-//        v = min + ivalue * (max - min) / sliderRange;
-//        if (isLogarithmic) {
-//            v = Math.exp(v);
-//        }
-//        
-//        System.out.println("========1=========");
-//        System.out.println("Slider value = " + ivalue);
-////        System.out.println("Previous = " + previous);
-//        System.out.println("int Value = " + v);
-//
-//        if (v - previous > 0) {
-//            previous = v;
-//        	v = Math.ceil(v);
-//        }
-//        else {
-//            previous = v;
-//        	v = Math.floor(v);
-//        }
-////        System.out.println("Previous = " + previous);
-//        
-////        setValue((int) v);
-//        setValue((int) Math.round(v));
+
         setValue(ivalue);
         
         setBlocking(false);
@@ -456,32 +427,6 @@ public class IntParameter extends Parameter implements PropertyChangeListener, C
      */
     private void updateView() {
         if ( slider != null ) {
-//        	// Number of ticks in the slider range
-//            int sliderRange = slider.getMaximum() - slider.getMinimum();
-//            int ivalue;
-//            
-//            System.out.println("========2==========");
-//            System.out.println("Slider range = " + sliderRange);
-//            
-//            // Minimum value for this parameter.
-//            double min = getMinimum();
-//
-//            // Maximum value for this parameter.
-//            double max = getMaximum();
-//            
-//            System.out.println("int minimum = " + min);
-//            System.out.println("int maximum = " + max);
-//
-//            double v = getValue();
-//            
-//            System.out.println("int value = " + value);
-//
-//            System.out.println("Slider minimum = " + slider.getMinimum());
-//            ivalue = slider.getMinimum()
-//                     + (int)(Math.round((v - min) * sliderRange / (max - min)));
-//            
-//            slider.setValue(ivalue);
-//            System.out.println("slider value set to " + ivalue);
             slider.setValue(getValue());
         }
         // update the text field
@@ -505,7 +450,6 @@ public class IntParameter extends Parameter implements PropertyChangeListener, C
      */
     public void setChecked(boolean b) {
         booleanp.setValue(b);
-//        booleanp.setEnabled(b);
     }
     
     /**

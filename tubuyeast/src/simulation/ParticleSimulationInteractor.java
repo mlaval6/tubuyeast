@@ -113,8 +113,10 @@ public class ParticleSimulationInteractor implements Interactor {
                         p1.p.set(xcurrent, ycurrent);
                         p1.v.set(0, 0); 
 
-//                        p1.p0.set( p1.p );
-//                        p1.v0.set( p1.v );
+                        if (creationEnabled) {
+                          p1.p0.set( p1.p );
+//                          p1.v0.set( p1.v );
+                        }
                         
                         if (creationEnabled) {
                             for ( Spring s : p1.springs ) {

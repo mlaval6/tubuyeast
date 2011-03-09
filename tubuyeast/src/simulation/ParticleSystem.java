@@ -87,7 +87,7 @@ public class ParticleSystem implements SceneGraphNode {
 		integrationMethodsComboBox = new ListComboBox<Integrator>(
 				integrationMethods);
 		
-		int method = 3;
+		int method = 4;
 		integrationMethodsComboBox.setSelected(method);
 		integrationMethod = integrationMethods.get(method);
 

@@ -330,4 +330,47 @@ public class Spring {
         force.add(kforce, bforce);
         return force;
     }
+    
+    private Vector2d n = new Vector2d();
+    private Vector2d u = new Vector2d();
+    private Vector2d v = new Vector2d();
+    private Vector2d w = new Vector2d();
+
+    public boolean intersect(Particle p, double step) {
+    	if (p == p1 || p == p2 || p.inContact ) return false;
+    	
+    	u.sub(p2.p, p1.p);
+
+    	v.set(p.v);
+    	v.normalize();
+//    	v.scale(step);
+    	
+    	w.sub(p1.p, p.p);
+    	
+    	double denom = v.y * u.x - v.x * u.y;
+    	
+    	// Collinear
+    	if (denom == 0) return false;
+    	
+    	double s = (v.x * w.y - v.y * w.x) / denom;
+    	double t = (u.x * w.y - u.y * w.x) / denom;
+    	
+    	// First make sure the particle will hit the spring
+    	if (0 <= t && t <= 1) {
+    		if (0 <= s && s <= 1) {
+    			// Can apply force/impulse in here
+    			double theta = Math.acos(p.v.dot(u) / (u.length() * p.v.length()));
+    			n.set(-u.y, u.x);
+    			n.normalize();
+    			if (n.dot(v) > 0) n.scale(-1);
+    			
+    			n.scale(2*p.v.length() * Math.sin(theta));
+    			p.v.add(n);
+    			
+        		p.inContact = true;
+        		return true;
+    		}
+    	}
+    	return false;
+    }
 }

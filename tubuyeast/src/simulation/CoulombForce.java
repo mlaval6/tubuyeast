@@ -13,7 +13,7 @@ public class CoulombForce {
 		double cell_scale = 1e-6;
 		
 		Vector2d dp = new Vector2d();
-		dp.sub(p2.p, p1.p);
+		dp.sub(p1.p, p2.p);
 		double r = dp.length() * cell_scale;
 		
 		// FIXME: this is just a hack to prevent div by 0... shouldn't happen
@@ -23,7 +23,7 @@ public class CoulombForce {
 
 		// FIXME: remove the leading constant when we have true values
 		double F = 1e16*k * p1.q * e * p2.q * e / (r*r);
-		p1.f.x -= F * dp.x; 
-		p1.f.y -= F * dp.y; 
+		p1.f.x += F * dp.x; 
+		p1.f.y += F * dp.y; 
 	}
 }

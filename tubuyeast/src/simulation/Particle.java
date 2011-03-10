@@ -187,14 +187,14 @@ public class Particle implements Serializable {
     
     public void glVertex2d(GL gl) {
 
-        if ( pinned ) {
+        if ( inContact ) {
+            gl.glColor4d( 1, 1, 1, 1 );
+        }
+        else if ( pinned ) {
             gl.glColor4d( 1, 0, 0, alpha );
         }
         else if ( heavy ) {
             gl.glColor4d( 0, 0, 1, alpha );
-        }
-        else if ( inContact ) {
-            gl.glColor4d( 1, 1, 1, 1 );
         }
         else {
             gl.glColor4d( 0, 0.95,0, alpha );

@@ -47,7 +47,7 @@ public class ImplicitEuler implements Integrator {
 
 		initMatrices();
 
-		cg = new ConjugateGradient(system.getParticles());
+		cg = new ConjugateGradient(system.getParticles().size());
 
 		updateConstraints();
 	}
@@ -177,7 +177,7 @@ public class ImplicitEuler implements Integrator {
 	 * Updates velocity constraints
 	 */
 	public void updateConstraints() {
-		cg.updateSystem();
+		cg.updateConstraints(system.getParticles());
 	}
 
 	/**
@@ -230,7 +230,7 @@ public class ImplicitEuler implements Integrator {
 		// Update constraints
 		// and add contact forces
 		// e.g. friction
-		cg.updateSystem();
+		cg.updateConstraints(system.getParticles());
 
 		cF = cg.solve(A, b, dv, numIterations);
 

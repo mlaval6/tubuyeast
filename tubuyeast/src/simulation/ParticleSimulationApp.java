@@ -214,7 +214,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 			
 		switch (which) {
 		case 1: // structural beam
-			Point2d p = new Point2d(100, 100);
+			Point2d p = new Point2d(100, 200);
 			Vector2d d = new Vector2d(20, 0);
 			p1 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
 			particles.add(p1);

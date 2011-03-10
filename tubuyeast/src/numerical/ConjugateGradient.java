@@ -80,8 +80,6 @@ public class ConjugateGradient {
      */
     private DenseMatrix bfT;
     
-    private List<Particle> particles;
-    
     /**
      * Number of particles in the system
      */
@@ -91,11 +89,11 @@ public class ConjugateGradient {
     private DenseMatrix identity;
     
     /**
-     * Creates a new conjugate gradient solver
-     * @param n the size of the system
+     * Creates a conjugate gradient solver
+     * @param n the number of particles in the system
      */
-    public ConjugateGradient( List<Particle> particles2) {
-        n = particles2.size();
+    public ConjugateGradient(int n ) {
+//        n = particles2.size();
         r = new DenseVector(2*n);
         rf = new DenseVector(2*n);
         rT = new DenseMatrix(1, 2*n);
@@ -110,7 +108,6 @@ public class ConjugateGradient {
         tmpVector = new DenseVector(2*n);
         rowMatrix = new DenseMatrix(1, 2*n);
         unitVector = new DenseVector(1);
-        this.particles = particles2;
 
         int[][] nz = new int[2*n][1];
         for (int i = 0; i< 2*n; i++) {
@@ -127,7 +124,6 @@ public class ConjugateGradient {
             Si[i] = new FlexCompRowMatrix(2, 2);
         }
 
-        updateSystem();
     }
     
     /** 
@@ -268,7 +264,7 @@ public class ConjugateGradient {
     /**
      * Updates the constraints
      */
-    public void updateSystem() {
+    public void updateConstraints(List<Particle> particles) {
         // Initialize velocity constraint Si to identity
         for (int i = 0; i < n; i++) {
             Si[i].set(identity);

@@ -103,9 +103,16 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public void step(double h) {
 
-		// Integrates the system
 		updateForces();
 
+//		for (Particle p : particles) {
+//			p.inContact = false;
+//			for (Spring s : springs) {
+//				s.intersect(p, h);
+//			}
+//		}		
+
+		// Integrates the system
 		integrationMethod.step(time, h, numIterations.getValue());
 
 		// Apply simple box-wall collision
@@ -114,7 +121,6 @@ public class ParticleSystem implements SceneGraphNode {
 				particles);
 
 		time = time + h;
-
 	}
 
 	/**

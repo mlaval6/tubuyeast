@@ -105,12 +105,12 @@ public class ParticleSystem implements SceneGraphNode {
 
 		updateForces();
 
-//		for (Particle p : particles) {
-//			p.inContact = false;
-//			for (Spring s : springs) {
-//				s.intersect(p, h);
-//			}
-//		}		
+		for (Particle p : particles) {
+			p.inContact = false;
+			for (Spring s : springs) {
+				s.intersect(p, h);
+			}
+		}		
 
 		// Integrates the system
 		integrationMethod.step(time, h, numIterations.getValue());

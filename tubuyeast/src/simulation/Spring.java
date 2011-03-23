@@ -3,6 +3,8 @@ package simulation;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 
+import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
 import tools.computations.CollisionTools;
 
 /**
@@ -110,6 +112,180 @@ public class Spring {
         p2.addForce(fs);
         p2.addForce(fd);        
         
+    }
+    
+    private FlexCompRowMatrix dfK = new FlexCompRowMatrix(2, 2);
+    private FlexCompRowMatrix dfB = new FlexCompRowMatrix(2, 2);
+    private FlexCompRowMatrix df2 = new FlexCompRowMatrix(2, 2);
+    private Vector2d diff = new Vector2d();
+    private double lx, ly;
+    
+    /** 
+     * Adds this spring's contribution to both the stiffness and damping matrices.
+     * @param K the stiffness matrix
+     * @param B the damping matrix
+     */
+    public void gradient(Matrix K, Matrix B) {
+        // Length of the spring
+        double length = getLength();
+
+        // Difference vector between the two particles
+        diff.sub(p1.p, p2.p);
+        lx = diff.x;
+        ly = diff.y;
+
+        df2.set(0, 0, lx*lx);
+        df2.set(0, 1, lx*ly);
+
+        df2.set(1, 0, ly*lx);
+        df2.set(1, 1, ly*ly);
+        
+        // Add second term of the stiffness matrix -k*r / |l|^3
+        dfK.set(df2);
+        dfK.scale(- k * l0 / (length * length * length) );        
+        // Add first term of the stiffness matrix -k*(1 - r / l)
+        // All entries are zero except on the diagonal
+        double vscale = -k * (1 - l0/length);
+        dfK.add(0, 0, vscale);
+        dfK.add(1, 1, vscale);
+
+        // Adds damping matrix
+        dfB.set(df2);
+        dfB.scale(-b / (length * length));
+
+        // Now we have the stiffness contribution for this spring
+        // Sets the 2x2 matrices for the current dFi / dXj
+        // where i = index for p1 and j = index for p2
+        // We have enough information to increment 4 of these matrices
+        // 1. dF1 / dx1 (more precisely it is dF12 / dX1 since this is only the contribution from P2)
+        // 2. dF1 / dx2
+        // 3. dF2 / dx2 = -dF1 / dx1 (more precisely it is dF21 / dX2 since this is only the contribution from P1)
+        // 4. dF2 / dx1 = -dF1 / dx2
+        // f12 = -f21 so we add these in an antisymmetric way in K
+        double kval = 0;
+        double bval = 0;
+        
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                /*
+                 * Stiffness
+                 */
+                kval = dfK.get(i, j);
+                
+                // df1/dx1 += df12/dx1
+                K.add(2 * p1.index + i, 2 * p1.index + j, kval);
+
+                // df1/dx2 += df12/dx2
+                K.add(2 * p1.index + i, 2 * p2.index + j, -kval);
+
+                // df2/dx1 += df21/dx1
+                K.add(2 * p2.index + i, 2 * p1.index + j, -kval);
+
+                // df2/dx2 += df21/dx2
+                K.add(2 * p2.index + i, 2 * p2.index + j, kval);
+
+                /*
+                 * Damping
+                 */
+                bval = dfB.get(i, j);
+
+                // df1/dx1 += df12/dx1
+                B.add(2 * p1.index + i, 2 * p1.index + j, bval);
+
+                // df1/dx2 += df12/dx2
+                B.add(2 * p1.index + i, 2 * p2.index + j, -bval);
+
+                // df2/dx1 += df21/dx1
+                B.add(2 * p2.index + i, 2 * p1.index + j, -bval);
+
+                // df2/dx2 += df21/dx2
+                B.add(2 * p2.index + i, 2 * p2.index + j, bval);
+            }
+        }
+    }
+    
+    /** 
+     * Adds only the contribution for the stiffness matrix
+     * @param K the stiffness matrix
+     */
+    public void gradient(Matrix K) {
+        // Length of the spring
+        double length = getLength();
+
+        // Difference vector between the two particles
+        diff.sub(p1.p, p2.p);
+        lx = diff.x;
+        ly = diff.y;
+
+        df2.set(0, 0, lx*lx);
+        df2.set(0, 1, lx*ly);
+
+        df2.set(1, 0, ly*lx);
+        df2.set(1, 1, ly*ly);
+        
+        // Add second term of the stiffness matrix -k*r / |l|^3
+        dfK.set(df2);
+        dfK.scale(- k * l0 / (length * length * length) );        
+        
+        // Add first term of the stiffness matrix -k*(1 - r / l)
+        // All entries are zero except on the diagonal where they are 1's
+        // so add them directly
+        double vscale = -k * (1 - l0/length);
+        dfK.add(0, 0, vscale);
+        dfK.add(1, 1, vscale);
+
+        // Adds damping matrix
+        dfB.set(df2);
+        dfB.scale(-b / (length * length));
+
+        // Now we have the stiffness contribution for this spring
+        // Sets the 3x3 matrices for the current dFi / dXj
+        // where i = index for p1 and j = index for p2
+        // We have enough information to increment 4 of these matrices
+        // 1. dF1 / dx1 (more precisely it is dF12 / dX1 since this is only the contribution from P2)
+        // 2. dF1 / dx2
+        // 3. dF2 / dx2 = -dF1 / dx1 (more precisely it is dF21 / dX2 since this is only the contribution from P1)
+        // 4. dF2 / dx1 = -dF1 / dx2
+        // f12 = -f21 so we add these in an antisymmetric way in K
+        double kval, bval;
+        
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                /*
+                 * Stiffness
+                 */
+                kval = dfK.get(i, j);
+                
+                // df1/dx1 += df12/dx1
+                K.add(2 * p1.index + i, 2 * p1.index + j, kval);
+
+                // df1/dx2 += df12/dx2
+                K.add(2 * p1.index + i, 2 * p2.index + j, -kval);
+
+                // df2/dx1 += df21/dx1
+                K.add(2 * p2.index + i, 2 * p1.index + j, -kval);
+
+                // df2/dx2 += df21/dx2
+                K.add(2 * p2.index + i, 2 * p2.index + j, kval);
+
+                /*
+                 * Damping
+                 */
+                bval = dfB.get(i, j);
+
+                // df1/dx1 += df12/dx1
+                K.add(2 * p1.index + i, 2 * p1.index + j, bval);
+
+                // df1/dx2 += df12/dx2
+                K.add(2 * p1.index + i, 2 * p2.index + j, -bval);
+
+                // df2/dx1 += df21/dx1
+                K.add(2 * p2.index + i, 2 * p1.index + j, -bval);
+
+                // df2/dx2 += df21/dx2
+                K.add(2 * p2.index + i, 2 * p2.index + j, bval);
+            }
+        }
     }
     
     public double getLength() {

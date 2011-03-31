@@ -68,7 +68,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
      */
     public ParticleSimulationApp() {
         system = new ParticleSystem(winsize);
-        createSystem(system, 3);
+        createSystem(system, 4);
 
         // Add an interactor to manage mouse and keyboard controls
         interactor = new ParticleSimulationInteractor(system);
@@ -684,7 +684,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				
 				//NUCLEUS
-				yTranspose = 0;
+				yTranspose = 350;
 				innerNuc = new LinkedList<Particle>();
 				outerNuc = new LinkedList<Particle>();
 				
@@ -696,10 +696,10 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				//Part Creating my ellipse
 				counter = 0;
-				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.098){
 					counter++;
-					double B = ((winsize.height/2)-220);
-					double A = 80.0;
+					double B = 200;
+					double A = 200.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
@@ -709,10 +709,10 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				}
 				
 				counter = 0;
-				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.098){
 					counter++;
-					double B = ((winsize.height/2)-200);
-					double A = 100.0;
+					double B = 220.0;
+					double A = 220.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
@@ -753,9 +753,9 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				MTchainParticles = new LinkedList<Particle>();
 				MTchainSprings = new LinkedList<Spring>();
 				
-				numberOfParticlesInChain = 16;
+				numberOfParticlesInChain = 37;
 				
-				lastParticle = bps.get(14);		//  y-coordinate of attachment point
+				lastParticle = bps.get(40);		//  y-coordinate of attachment point
 				lastY = lastParticle.p.y;
 				
 				for(int i=0; i<numberOfParticlesInChain; i++){
@@ -783,7 +783,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 
 				
 				//  attach the lastParticle to the top of the nucleus membrane
-				newSpring = new Spring(lastParticle, outerNuc.get(21), k, b);
+				newSpring = new Spring(lastParticle, outerNuc.get(48), k, b);
 				springs.add(newSpring);
 				
 				break;
@@ -980,11 +980,11 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				
 				//NUCLEUS
-				yTranspose = 190;
+				yTranspose = 350;
 				innerNuc = new LinkedList<Particle>();
 				outerNuc = new LinkedList<Particle>();
 				
-				//Coordonates of the center of the window
+				//Coordinates of the center of the window
 				
 
 				System.out.println(x0);
@@ -992,10 +992,10 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				//Part Creating my ellipse
 				counter = 0;
-				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.098){
 					counter++;
-					double B = ((winsize.height/2)-220);
-					double A = 80.0;
+					double B = 200;
+					double A = 200.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
@@ -1005,10 +1005,10 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				}
 				
 				counter = 0;
-				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.098){
 					counter++;
-					double B = ((winsize.height/2)-200);
-					double A = 100.0;
+					double B = 220.0;
+					double A = 220.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
@@ -1025,20 +1025,63 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				for(int i = 0; i < outerNuc.size(); i++){
 					springs.add(new Spring(outerNuc.get(i),innerNuc.get(i),k,b));
-					if(i+1 < outerNuc.size() && (i!=3)){
+					if(i+1 < outerNuc.size()){
 						springs.add(new Spring(outerNuc.get(i),outerNuc.get(i+1),k,b));
 						springs.add(new Spring(innerNuc.get(i),innerNuc.get(i+1),k,b));
 					}
-					if(i+1 < innerNuc.size() && (i!=3)){
+					if(i+1 < innerNuc.size()){
 						springs.add(new Spring(outerNuc.get(i),innerNuc.get(i+1),k,b));
 					}
-					if(i+1 < outerNuc.size() && (i!=3)){
+					if(i+1 < outerNuc.size()){
 						springs.add(new Spring(outerNuc.get(i+1),innerNuc.get(i),k,b));
 					}
 				}
 				
 				particles.addAll(innerNuc);
 				particles.addAll(outerNuc);
+				
+				//outerNuc.get(21)
+				//bps.get(14)
+				
+				//  the gap between subsequent particles in the chain
+				stepSize = 10;
+				
+				MTchainParticles = new LinkedList<Particle>();
+				MTchainSprings = new LinkedList<Spring>();
+				
+				numberOfParticlesInChain = 37;
+				
+				lastParticle = bps.get(30);		//  y-coordinate of attachment point
+				lastY = lastParticle.p.y;
+				
+				for(int i=0; i<numberOfParticlesInChain; i++){
+					
+					Particle newParticle;
+					
+					double newY = lastY+stepSize;
+					newParticle = new Particle(x0, newY, 0, 0);
+					
+					newSpring = new Spring(lastParticle, newParticle, k, b);
+					
+					newSpring.l0 = stepSize;
+					newSpring.setK(stepSize);
+					newSpring.setB(1);
+					
+					MTchainParticles.add(newParticle);
+					MTchainSprings.add(newSpring);
+					
+					
+					lastY = newY;
+					lastParticle = newParticle;
+				}
+				particles.addAll(MTchainParticles);
+				springs.addAll(MTchainSprings);
+
+				
+				//  attach the lastParticle to the top of the nucleus membrane
+				newSpring = new Spring(lastParticle, outerNuc.get(48), k, b);
+				springs.add(newSpring);
+				
 				
 				break;
 				

@@ -68,7 +68,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
      */
     public ParticleSimulationApp() {
         system = new ParticleSystem(winsize);
-        createSystem(system, 4);
+        createSystem(system, 5);
 
         // Add an interactor to manage mouse and keyboard controls
         interactor = new ParticleSimulationInteractor(system);
@@ -766,190 +766,139 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				x0 = (int) (winsize.width / 2.0);
 				y0 = (int) (winsize.height / 2.0);
 
-				System.out.println(x0);
-				System.out.println(y0);
+	
 				
 				//Part Creating my ellipse
 				counter = 0;
-				for(int y = 50; y <= (winsize.height-50); y = y + 20){
+				int budBreakPoint = 7;
+				//PI/34
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.0924){
 					counter++;
-					if(counter > 20){
-						break;
+					if(counter > budBreakPoint && counter < 29){
+						continue;
 					}
-					int yWin = y - y0;
-					int yPos = yWin*yWin;
-					double b2 = Math.pow(((winsize.height/2)-50),2);
-					double a = 200.0;
-					double yFrac = (double) yPos/b2;
-					int x = (int) (Math.sqrt(1 - yFrac) * a);
-					
+					double B = ((winsize.height/2)-50);
+					double A = 200.0;
+					int x = (int)(A*Math.cos(t));
+					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
-					pF = new Particle(x+x0,y, 0, 0);
-					pS = new Particle((x*-1)+x0,y, 0, 0);
+					pF = new Particle(x+x0,(y+y0), 0, 0);
 					//Addind those particles to the list
-					if(x == 0){
-						bps.add(pF);	
-					}
-					else{
-						bps.add(pS);
-						bps.add(pF);
-					}
-					//(x^2/200^2)  +  (y^2/(winsize.height-50^2))  =   1
+					bps.add(pF);	
 				}
 				
-				for(int i = 0; i < bps.size(); i++){
-					if(i+2 < bps.size()){
-						springs.add(new Spring(bps.get(i),bps.get(i+2),k,b));
-					}
-				}
+			
 				
 				counter = 0;
-				for(int y = 30; y <= (winsize.height-30); y = y + 22){
+				//PI/34
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.0924){
 					counter++;
-					if(counter > 9 && counter < 17){
-						y = y - 1;
+					if(counter > budBreakPoint && counter < 29){
+						continue;
 					}
-					if(counter > 20){
-						break;
-					}
-					int yWin = y - y0;
-					int yPos = yWin*yWin;
-					double b2 = Math.pow(((winsize.height/2)-30),2);
-					double a = 220.0;
-					double yFrac = (double) yPos/b2;
-					int x = (int) (Math.sqrt(1 - yFrac) * a);
-					
+					double B = ((winsize.height/2)-30);
+					double A = 220.0;
+					int x = (int)(A*Math.cos(t));
+					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
-					pF = new Particle(x+x0,y, 0, 0);
-					pS = new Particle((x*-1)+x0,y, 0, 0);
+					pF = new Particle(x+x0,(y+y0), 0, 0);
 					//Addind those particles to the list
-					if(x == 0){
-						OuterRingBps.add(pF);	
-					}
-					else{
-						OuterRingBps.add(pS);
-						OuterRingBps.add(pF);
-					}
-					//(x^2/200^2)  +  (y^2/(winsize.height-50^2))  =   1
+					OuterRingBps.add(pF);	
 				}
-				
-				for(int i = 0; i < OuterRingBps.size(); i++){
-					if(i+2 < OuterRingBps.size()){
-						springs.add(new Spring(OuterRingBps.get(i),OuterRingBps.get(i+2),k,b));
-					}
-				}
-				
-				springs.add(new Spring(OuterRingBps.get(0),bps.get(1),k,b));
-				springs.add(new Spring(bps.get(0),OuterRingBps.get(1),k,b));
 
-				springs.add(new Spring(OuterRingBps.get(0),OuterRingBps.get(1),k,b));
-				springs.add(new Spring(bps.get(0),bps.get(1),k,b));
+				
+				
+				springs.add(new Spring(OuterRingBps.get(OuterRingBps.size()-1),bps.get(0),k,b));
+				springs.add(new Spring(OuterRingBps.get(0),bps.get(bps.size()-1),k,b));
+				springs.add(new Spring(bps.get(0),bps.get(bps.size()-1),k,b));
+				springs.add(new Spring(OuterRingBps.get(OuterRingBps.size()-1),OuterRingBps.get(0),k,b));
 				
 				for(int i = 0; i < OuterRingBps.size(); i++){
 					springs.add(new Spring(OuterRingBps.get(i),bps.get(i),k,b));
-					if(i+2 < bps.size()){
-						springs.add(new Spring(OuterRingBps.get(i),bps.get(i+2),k,b));
-						springs.add(new Spring(bps.get(i),OuterRingBps.get(i+2),k,b));
+					if(i+1 < OuterRingBps.size() && (i!=(budBreakPoint-1))){
+						springs.add(new Spring(OuterRingBps.get(i),OuterRingBps.get(i+1),k,b));
+						springs.add(new Spring(bps.get(i),bps.get(i+1),k,b));
 					}
-					//if(i-2 >= 0){
-					//	springs.add(new Spring(OuterRingBps.get(i),bps.get(i-2),k,b));
-					//}
-					
+					if(i+1 < bps.size() && (i!= (budBreakPoint-1))){
+						springs.add(new Spring(OuterRingBps.get(i),bps.get(i+1),k,b));
+					}
+					if(i+1 < OuterRingBps.size() && (i!=(budBreakPoint-1))){
+						springs.add(new Spring(OuterRingBps.get(i+1),bps.get(i),k,b));
+					}
 				}
+
+				
+				
 				
 				counter = 0;
-				for(int y = 285; y >= 0; y = y - 10){
+				yTranspose = 415;
+				counter = 0;
+				// PI/80 = 0.039269908169872
+				
+				int cellMemBreak = 112;
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.03927){
 					counter++;
-					if(counter > 7){
-						break;
+					if(counter > cellMemBreak && counter < 130){
+						continue;
 					}
-					if(counter > 2){
-						int originDistFromWindow = 114;
-						int yPos = y - originDistFromWindow;
-						yPos = winsize.height - yPos;
-	//					if(counter > 9 && counter < 17){
-	//						y = y - 1;
-	//					}
-	//					if(counter > 20){
-	//						break;
-	//					}
-						//int yWin = y - y0;
-						int ySquared = y*y;
-						double b2 = 285*285;
-						double a = 600.0;
-						double yFrac = (double) ySquared/b2;
-						int x = (int) (Math.sqrt(1 - yFrac) * a);
+					if(counter > 104 && counter < 138){
+						double B = 285;
+						double A = 610.0;
+						int x = (int)(A*Math.cos(t));
+						int y = (int)(B*Math.sin(t));
 						//Creating my particles at the wanted position
-						pF = new Particle(x+x0,yPos, 0, 0);
-						pS = new Particle((x*-1)+x0,yPos, 0, 0);
+						pF = new Particle(x+x0,(y+y0)+yTranspose, 0, 0);
 						//Addind those particles to the list
-						if(x == 0){
-							innerMembrane.add(pF);	
-						}
-						else{
-							innerMembrane.add(pS);
-							innerMembrane.add(pF);
-						}
-						//(x^2/200^2)  +  (y^2/(winsize.height-50^2))  =   1
+						innerMembrane.add(pF);
 					}
 				}
 				
 				counter = 0;
-				for(int y = 306; y >= 0; y = y - 10){
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.03927){
 					counter++;
-					if(counter > 7){
-						break;
+					if(counter > cellMemBreak && counter < 130){
+						continue;
 					}
-					if(counter > 2){
-						int originDistFromWindow = 114;
-						int yPos = y - originDistFromWindow;
-						yPos = winsize.height - yPos;
-	//					if(counter > 9 && counter < 17){
-	//						y = y - 1;
-	//					}
-	//					if(counter > 20){
-	//						break;
-	//					}
-						//int yWin = y - y0;
-						int ySquared = y*y;
-						double b2 = 306*306;
-						double a = 630.0;
-						double yFrac = (double) ySquared/b2;
-						int x = (int) (Math.sqrt(1 - yFrac) * a);
+					if(counter > 104 && counter < 138){
+						double B = 305;
+						double A = 630.0;
+						int x = (int)(A*Math.cos(t));
+						int y = (int)(B*Math.sin(t));
 						//Creating my particles at the wanted position
-						pF = new Particle(x+x0,yPos, 0, 0);
-						pS = new Particle((x*-1)+x0,yPos, 0, 0);
+						pF = new Particle(x+x0,(y+y0)+yTranspose, 0, 0);
 						//Addind those particles to the list
-						if(x == 0){
-							outterMembrane.add(pF);	
-						}
-						else{
-							outterMembrane.add(pS);
-							outterMembrane.add(pF);
-						}
-						//(x^2/200^2)  +  (y^2/(winsize.height-50^2))  =   1
+						outterMembrane.add(pF);
 					}
 				}
 				
-				springs.add(new Spring(innerMembrane.get(0),OuterRingBps.get(OuterRingBps.size()-2),k,b));
-				springs.add(new Spring(innerMembrane.get(1),OuterRingBps.get(OuterRingBps.size()-1),k,b));
-				springs.add(new Spring(innerMembrane.get(0),OuterRingBps.get(OuterRingBps.size()-4),k,b));
-				springs.add(new Spring(innerMembrane.get(1),OuterRingBps.get(OuterRingBps.size()-3),k,b));
-				springs.add(new Spring(outterMembrane.get(1),OuterRingBps.get(OuterRingBps.size()-3),k,b));
-				springs.add(new Spring(outterMembrane.get(0),OuterRingBps.get(OuterRingBps.size()-4),k,b));
-				springs.add(new Spring(outterMembrane.get(0),OuterRingBps.get(OuterRingBps.size()-2),k,b));
-				springs.add(new Spring(outterMembrane.get(1),OuterRingBps.get(OuterRingBps.size()-1),k,b));
-				for(int i = 0; i < innerMembrane.size(); i++){
-					springs.add(new Spring(innerMembrane.get(i),outterMembrane.get(i),k,b));
-					
-					if(i+2 < innerMembrane.size()){
-						springs.add(new Spring(innerMembrane.get(i),innerMembrane.get(i+2),k,b));
-						springs.add(new Spring(outterMembrane.get(i),outterMembrane.get(i+2),k,b));
-						springs.add(new Spring(innerMembrane.get(i),outterMembrane.get(i+2),k,b));
-						springs.add(new Spring(outterMembrane.get(i),innerMembrane.get(i+2),k,b));
+
+				
+				int indexBreak = 7;
+				for(int i = 0; i < outterMembrane.size(); i++){
+					springs.add(new Spring(outterMembrane.get(i),innerMembrane.get(i),k,b));
+					if(i+1 < outterMembrane.size() && (i!=indexBreak)){
+						springs.add(new Spring(outterMembrane.get(i),outterMembrane.get(i+1),k,b));
+						springs.add(new Spring(innerMembrane.get(i),innerMembrane.get(i+1),k,b));
+					}
+					if(i+1 < innerMembrane.size() && (i!=indexBreak)){
+						springs.add(new Spring(outterMembrane.get(i),innerMembrane.get(i+1),k,b));
+					}
+					if(i+1 < outterMembrane.size() && (i!=indexBreak)){
+						springs.add(new Spring(outterMembrane.get(i+1),innerMembrane.get(i),k,b));
 					}
 				}
 				
+				springs.add(new Spring(outterMembrane.get(indexBreak),OuterRingBps.get((budBreakPoint+1)),k,b));
+				springs.add(new Spring(outterMembrane.get(indexBreak),OuterRingBps.get((budBreakPoint)),k,b));
+				springs.add(new Spring(innerMembrane.get(indexBreak),OuterRingBps.get((budBreakPoint+1)),k,b));
+				springs.add(new Spring(innerMembrane.get(indexBreak),OuterRingBps.get((budBreakPoint)),k,b));
+				
+				springs.add(new Spring(outterMembrane.get(indexBreak+1),OuterRingBps.get(budBreakPoint-1),k,b));
+				springs.add(new Spring(outterMembrane.get(indexBreak+1),OuterRingBps.get((budBreakPoint-2)),k,b));
+				springs.add(new Spring(innerMembrane.get(indexBreak+1),OuterRingBps.get(budBreakPoint-1),k,b));
+				springs.add(new Spring(innerMembrane.get(indexBreak+1),OuterRingBps.get((budBreakPoint-2)),k,b));
+			
+
 				//Putting my list of particles in this list which I guess is then drawn on the window
 				particles.addAll(bps);
 				particles.addAll(OuterRingBps);
@@ -957,6 +906,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(outterMembrane);
 				
 				break;
+				
+				
 
 		}
 		system.updateSystem();		

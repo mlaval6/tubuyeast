@@ -1,5 +1,7 @@
 package simulation;
 
+import javax.media.opengl.GL;
+import javax.media.opengl.GLAutoDrawable;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
 
@@ -423,7 +425,8 @@ public class Spring {
     public boolean intersect(Particle p, double stepSize) {
     	
     	// Don't intersect particles attached to this spring
-    	if (p == p1 || p == p2 || p.inContact ) return false;
+//    	if (p == p1 || p == p2 || p.inContact || !p1.collidable || ! p2.collidable) return false;
+    	if (p == p1 || p == p2 || p.inContact) return false;
 
     	// Line segment for spring
     	Point2d A = new Point2d(p1.p);
@@ -445,10 +448,25 @@ public class Spring {
     		p1.inContact = true;
     		p2.inContact = true;
 
-    		CollisionTools.bounce(p, A, B, 1);
+    		if (p.collidable) CollisionTools.bounce(p, A, B, 1);
 			
     		return true;
     	}
     }
     
+	public void display(GLAutoDrawable drawable) {
+		if (!p1.collidable && p1.inContact) return;
+		if (!p2.collidable && p2.inContact) return;
+
+		GL gl = drawable.getGL();
+		
+		gl.glColor4d(0, 0.5, 0.5, 0.5);
+		gl.glLineWidth(2);
+		
+		gl.glBegin(GL.GL_LINES);
+		gl.glVertex2d(p1.p.x, p1.p.y);
+		gl.glVertex2d(p2.p.x, p2.p.y);
+		gl.glEnd();
+
+	}    
 }

@@ -45,11 +45,13 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
         
     private BooleanParameter run = new BooleanParameter( "run", false );
     
-    private DoubleParameter stepsize = new DoubleParameter( "step size", 0.01, 1e-5, 1 );
+    private DoubleParameter stepsize = new DoubleParameter( "step size", 0.0015, 1e-5, 1 );
     
-    private IntParameter substeps = new IntParameter( "sub steps (integer)", 10, 1, 100);
+    private IntParameter substeps = new IntParameter( "sub steps (integer)", 1, 1, 100);
     
-    private static Dimension winsize = new Dimension(800, 600);
+    private static Dimension simsize = new Dimension(800, 600);
+
+    private static Dimension wsize = new Dimension(800, 800);
 
     private ParticleSimulationInteractor interactor;
 
@@ -67,13 +69,13 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
      * Creates the application / scene instance
      */
     public ParticleSimulationApp() {
-        system = new ParticleSystem(winsize);
-        createSystem(system, 4);
+        system = new ParticleSystem(simsize);
+        createSystem(system, 3);
 
         // Add an interactor to manage mouse and keyboard controls
         interactor = new ParticleSimulationInteractor(system);
         
-        ev = new OpenglViewer("Tubuyeast", this, new Dimension(winsize), new Dimension(650, winsize.height + 90) );
+        ev = new OpenglViewer("Tubuyeast", this, new Dimension(wsize), new Dimension(650, wsize.height + 90) );
 
         ev.addInteractor(interactor);
         ev.addInteractor(this);
@@ -210,6 +212,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 		double b = system.getB();
 		
 		Particle p1, p2, p3, p4;
+		Spring newSpring;
 		int N;
 			
 		switch (which) {
@@ -269,7 +272,14 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				for (int i = 1; i < N; i++) {
 					 d.set( 20*Math.cos(i*Math.PI/N), 20*Math.sin(i*Math.PI/N) );
 					p3 = new Particle(p.x - d.y, p.y + d.x, 0, 0);
-					p4 = new Particle(p.x + d.y, p.y - d.x, 0, 0);
+					
+					if (i == N - 1) {
+						p4 = new MotorParticle(p.x + d.y, p.y - d.x, 0, 0);
+					}
+					else {
+						p4 = new Particle(p.x + d.y, p.y - d.x, 0, 0);
+					}
+					
 					particles.add(p3);
 					particles.add(p4);
 					springs.add(new Spring(p3, p1, k, b));
@@ -292,8 +302,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				List<Particle> outterMembrane = new LinkedList<Particle>();
 				Particle pF, pS;
 				//Coordonates of the center of the window
-				int x0 = (int) (winsize.width / 2.0);
-				int y0 = (int) (winsize.height / 2.0);
+				int x0 = (int) (simsize.width / 2.0);
+				int y0 = (int) (simsize.height / 2.0) + 100;
 
 				System.out.println(x0);
 				System.out.println(y0);
@@ -305,12 +315,13 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > 4 && counter < 12){
 						continue;
 					}
-					double B = ((winsize.height/2)-220);
+					double B = ((simsize.height/2)-220);
 					double A = 80.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0)-yTranspose, 0, 0);
+					pF.pinned = true;
 					//Addind those particles to the list
 					bps.add(pF);	
 				}
@@ -321,12 +332,13 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > 4 && counter < 12){
 						continue;
 					}
-					double B = ((winsize.height/2)-200);
+					double B = ((simsize.height/2)-200);
 					double A = 100.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0)-yTranspose, 0, 0);
+					pF.pinned = true;
 					//Addind those particles to the list
 
 					OuterRingBps.add(pF);	
@@ -361,12 +373,13 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > 47 && counter < 57){
 						continue;
 					}
-					double B = ((winsize.height/2)-95);
+					double B = ((simsize.height/2)-95);
 					double A = 205.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0)+yLower, 0, 0);
+					pF.pinned = true;
 					//Addind those particles to the list
 					innerMembrane.add(pF);	
 				}
@@ -378,12 +391,13 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 						continue;
 					}
 					
-					double B = ((winsize.height/2)-75);
+					double B = ((simsize.height/2)-75);
 					double A = 225.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0)+yLower, 0, 0);
+					pF.pinned = true;
 					//Addind those particles to the list
 
 					outterMembrane.add(pF);	
@@ -441,7 +455,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				counter = 0;
 				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
 					counter++;
-					double B = ((winsize.height/2)-220);
+					double B = ((simsize.height/2)-220);
 					double A = 80.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
@@ -454,7 +468,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				counter = 0;
 				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
 					counter++;
-					double B = ((winsize.height/2)-200);
+					double B = ((simsize.height/2)-200);
 					double A = 100.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
@@ -501,23 +515,37 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				Particle lastParticle = bps.get(14);		//  y-coordinate of attachment point
 				double lastY = lastParticle.p.y;
 				
+				// TODO: set this in UI
+				double chainStiffness = 200000;
+				
 				for(int i=0; i<numberOfParticlesInChain; i++){
 					
 					Particle newParticle;
-					Spring newSpring;
 					
 					double newY = lastY+stepSize;
-					newParticle = new Particle(x0, newY, 0, 0);
-					
-					newSpring = new Spring(lastParticle, newParticle, k, b);
-					
-					newSpring.l0 = stepSize;
-					newSpring.setK(stepSize);
-					newSpring.setB(1);
+					if (i == 0) {
+						newParticle = new MotorParticle(x0, newY, 0, 0);
+						newParticle.heavy = true;
+					}
+					else {
+						newParticle = new Particle(x0, newY, 0, 0);
+					}
+
+					// Don't collide the chain
+					newParticle.collidable = false;
+										
+					// FIXME: removed otherwise the whole membrane gets pulled up
+					if (i != 0) {
+						newSpring = new Spring(lastParticle, newParticle, chainStiffness, b);
+						
+						newSpring.l0 = stepSize;
+						// TODO: k is equal to step size? huh?
+//						newSpring.setK(stepSize);
+						newSpring.setB(1);
+						MTchainSprings.add(newSpring);
+					}
 					
 					MTchainParticles.add(newParticle);
-					MTchainSprings.add(newSpring);
-					
 					
 					lastY = newY;
 					lastParticle = newParticle;
@@ -527,7 +555,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 
 				
 				//  attach the lastParticle to the top of the nucleus membrane
-				Spring newSpring = new Spring(lastParticle, outerNuc.get(21), k, b);
+				newSpring = new Spring(lastParticle, outerNuc.get(21), k, b);
 				springs.add(newSpring);
 				
 				
@@ -542,8 +570,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				outterMembrane = new LinkedList<Particle>();
 				
 				//Coordonates of the center of the window
-				x0 = (int) (winsize.width / 2.0);
-				y0 = (int) (winsize.height / 2.0);
+				x0 = (int) (simsize.width / 2.0);
+				y0 = (int) (simsize.height / 2.0);
 
 				System.out.println(x0);
 				System.out.println(y0);
@@ -557,7 +585,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > 12 && counter < 24){
 						continue;
 					}
-					double B = ((winsize.height/2)-100);
+					double B = ((simsize.height/2)-100);
 					double A = 200.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
@@ -576,7 +604,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > 12 && counter < 24){
 						continue;
 					}
-					double B = ((winsize.height/2)-80);
+					double B = ((simsize.height/2)-80);
 					double A = 220.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
@@ -835,8 +863,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				outterMembrane = new LinkedList<Particle>();
 				
 				//Coordonates of the center of the window
-				x0 = (int) (winsize.width / 2.0);
-				y0 = (int) (winsize.height / 2.0);
+				x0 = (int) (simsize.width / 2.0);
+				y0 = (int) (simsize.height / 2.0);
 
 	
 				
@@ -849,7 +877,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > budBreakPoint && counter < 29){
 						continue;
 					}
-					double B = ((winsize.height/2)-50);
+					double B = ((simsize.height/2)-50);
 					double A = 200.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
@@ -868,7 +896,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > budBreakPoint && counter < 29){
 						continue;
 					}
-					double B = ((winsize.height/2)-30);
+					double B = ((simsize.height/2)-30);
 					double A = 220.0;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));

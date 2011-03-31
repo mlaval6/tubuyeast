@@ -34,14 +34,14 @@ public class Particle implements Serializable {
     public boolean pinned = false;
         
     /**
-     * If this particle can be deleted.
+     * If this particle can be collided.
      */
-    boolean deleteable = true;
+    public boolean collidable = true;
     
     /**
      * If this particle is heavy.
      */
-    boolean heavy = false;
+    public boolean heavy = false;
         
     /**
      * This particle's mass.
@@ -186,8 +186,18 @@ public class Particle implements Serializable {
     public boolean grabbed = false;
     
     public void glVertex2d(GL gl) {
-
-        if ( inContact ) {
+    	
+    	if (!collidable && inContact) {
+    		// don't draw
+            gl.glColor4d(1, 0.3, 0.8, 0 );
+    	}
+    	else if (this instanceof MotorParticle) {
+            gl.glColor4d(1, 0.3, 0.8, 1 );
+    	}
+    	else if (!collidable) {
+            gl.glColor4d(1, 0.3, 0.8, 0.5 );
+    	}
+    	else if ( inContact ) {
             gl.glColor4d( 1, 1, 1, 1 );
         }
         else if ( pinned ) {

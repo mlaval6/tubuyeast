@@ -14,7 +14,7 @@ public class BoxCollider {
         for ( Particle p : particles ) {
             
             // If the particle is pinned, do not change its position/velocity
-            if (!p.pinned) {
+            if (!p.pinned && p.collidable) {
                 // Check if the new position lies outside of the window
                 if (p.p.x <= 0 + WDX) {
                     p.p.x = WDX;

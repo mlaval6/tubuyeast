@@ -68,7 +68,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
      */
     public ParticleSimulationApp() {
         system = new ParticleSystem(winsize);
-        createSystem(system, 5);
+        createSystem(system, 3);
 
         // Add an interactor to manage mouse and keyboard controls
         interactor = new ParticleSimulationInteractor(system);
@@ -906,7 +906,6 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(outterMembrane);
 				
 				break;
-				
 				
 
 		}

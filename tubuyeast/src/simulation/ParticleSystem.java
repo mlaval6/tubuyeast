@@ -51,13 +51,16 @@ public class ParticleSystem implements SceneGraphNode {
 	public static DoubleParameter g = new DoubleParameter("gravity", 9.8, -100,
 			100);
 
-	private IntParameter q = new IntParameter("Coulomb charge multiple", 0, -1000,
+	private IntParameter q = new IntParameter("Coulomb charge multiple", 40, -1000,
 			1000);
 
-	private DoubleParameter k = new DoubleParameter("stiffness", 100, 0.001,
+	private DoubleParameter k = new DoubleParameter("stiffness", 10000, 0.001,
 			100000);
 
-	private DoubleParameter b = new DoubleParameter("damping", 0.3, 0, 100);
+	private DoubleParameter pforce = new DoubleParameter("pulling force (N)", 25000, -1e6,
+			1e6);
+
+	private DoubleParameter b = new DoubleParameter("damping", 100, 0, 1000);
 
 	private IntParameter numIterations = new IntParameter("iterations", 5, 1,
 			1000);
@@ -104,9 +107,17 @@ public class ParticleSystem implements SceneGraphNode {
 	public void step(double h) {
 
 		updateForces();
-
+		
+		// Collide particles
 		for (Particle p : particles) {
-			p.inContact = false;
+			if (p instanceof MotorParticle || !p.collidable) {
+				// could competely avoid collision
+//				continue;
+			}
+			else {
+				p.inContact = false;
+			}
+			
 			for (Spring s : springs) {
 				s.intersect(p, h);
 			}
@@ -117,8 +128,8 @@ public class ParticleSystem implements SceneGraphNode {
 
 		// Apply simple box-wall collision
 		// TODO: implement constraints in conjugate gradient
-		BoxCollider.collide(wsize.getWidth(), wsize.getHeight(), rc.getValue(),
-				particles);
+//		BoxCollider.collide(wsize.getWidth(), wsize.getHeight(), rc.getValue(),
+//				particles);
 
 		time = time + h;
 	}
@@ -170,9 +181,8 @@ public class ParticleSystem implements SceneGraphNode {
 	public void clearParticles() {
 		List<Particle> toRemove = new LinkedList<Particle>();
 		for (Particle p : particles) {
-			if (p.deleteable) {
-				toRemove.add(p);
-			}
+			// TODO: could add a deletion filter here
+			toRemove.add(p);
 		}
 
 		particles.removeAll(toRemove);
@@ -201,17 +211,25 @@ public class ParticleSystem implements SceneGraphNode {
 			p.f.scale(p.mass);
 
 		}
-
+		
 		// Computes and adds the spring forces
 		for (Spring spring : springs) {
 			spring.apply();
 		}
 		
 		for (Particle p1: particles) {
+			if (!p1.collidable) continue;
 			for (Particle p2: particles) {
-				if (p1 == p2) continue;
+				if (p1 == p2 || !p2.collidable) continue;
 				
 				CoulombForce.apply(p1, p2);
+			}
+		}
+
+		// Add pulling to motor proteins
+		for (Particle p: particles) {
+			if (p instanceof MotorParticle) {
+				((MotorParticle) p).apply(pforce.getValue());
 			}
 		}
 
@@ -268,7 +286,7 @@ public class ParticleSystem implements SceneGraphNode {
 	public void init(GLAutoDrawable drawable) {
 		// do nothing
 	}
-
+	
 	public void display(GLAutoDrawable drawable) {
 		GL gl = drawable.getGL();
 
@@ -302,14 +320,9 @@ public class ParticleSystem implements SceneGraphNode {
 			gl.glEnd();
 		}
 
-		gl.glColor4d(0, 0.5, 0.5, 0.5);
-		gl.glLineWidth(2);
-		gl.glBegin(GL.GL_LINES);
 		for (Spring s : springs) {
-			gl.glVertex2d(s.p1.p.x, s.p1.p.y);
-			gl.glVertex2d(s.p2.p.x, s.p2.p.y);
+			s.display(drawable);
 		}
-		gl.glEnd();
 
 		if (pgrabbed != null) {
 			ParticleSimulationInteractor.drawLineToParticle(drawable,
@@ -335,6 +348,8 @@ public class ParticleSystem implements SceneGraphNode {
 
 		vfp.add(numIterations.getSliderControls());
 		vfp.add(g.getSliderControlsExtended("use"));
+		g.setChecked(false);
+		vfp.add(pforce.getSliderControls());
 		vfp.add(q.getSliderControls());
 		vfp.add(k.getSliderControls());
 		vfp.add(b.getSliderControls());
@@ -420,5 +435,5 @@ public class ParticleSystem implements SceneGraphNode {
 	public double getB() {
 		return b.getValue();
 	}
-
+	
 }

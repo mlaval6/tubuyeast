@@ -17,7 +17,10 @@ public class CoulombForce {
 		double r = dp.length() * cell_scale;
 		
 		// FIXME: this is just a hack to prevent div by 0... shouldn't happen
-		if (r == 0) return;
+		if (r == 0) {
+			System.out.println("division by zero occured... Quiting!");
+			return;
+		}
 		
 		dp.normalize();
 

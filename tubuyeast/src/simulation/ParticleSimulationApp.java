@@ -221,143 +221,6 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 			
 			//  Rousseau's Code
 			
-			
-			//  find the middle of the window
-			double xMid = (int) (winsize.width / 2.0);
-			double yMid = (int) (winsize.height / 2.0);
-			
-			
-			//  set the location of the anchor of the MT to the membrane
-			double xAnchorToCellWall = xMid;
-			double yAnchorToCellWall = 50;
-			
-			
-			//  create the particle that anchors the MT to the membrane
-			Particle anchorToCellWall;
-			anchorToCellWall = new Particle(xAnchorToCellWall, yAnchorToCellWall, 0, 0);
-			anchorToCellWall.pinned = true;
-			particles.add(anchorToCellWall);
-			
-			
-			
-			//  create the chain of particles for the MT from the anchor point to the nucleus
-			//  specify the distance between the particles of the MT
-			double lastY = yAnchorToCellWall;
-			Particle lastParticle = anchorToCellWall;
-			
-			//  the gap between subsequent particles in the chain
-			int stepSize = 10;
-			
-			List<Particle> MTchainParticles = new LinkedList<Particle>();
-			List<Spring> MTchainSprings = new LinkedList<Spring>();
-			
-			int numberOfParticlesInChain = 10;
-			
-			for(int i=0; i<numberOfParticlesInChain; i++){
-				
-				Particle newParticle;
-				Spring newSpring;
-				
-				double newY = lastY+stepSize;
-				newParticle = new Particle(xMid, newY, 0, 0);
-				
-				newSpring = new Spring(lastParticle, newParticle, k, b);
-				
-				newSpring.l0 = stepSize;
-				newSpring.setK(stepSize);
-				newSpring.setB(1);
-				
-				MTchainParticles.add(newParticle);
-				MTchainSprings.add(newSpring);
-				
-				
-				lastY = newY;
-				lastParticle = newParticle;
-			}
-			particles.addAll(MTchainParticles);
-			springs.addAll(MTchainSprings);
-			
-			
-			
-			
-			//  create the membrane of the nucleus
-			double nucleusSpringK = 10;
-			int nucleusSpringB = 10;
-			double nucleusSpringLength = 10;
-			
-			Particle nucleusAttachmentParticle = MTchainParticles.get(MTchainParticles.size()-1);
-			double xNucleusOrigin = nucleusAttachmentParticle.p.x;
-			double yNucleusOrigin = nucleusAttachmentParticle.p.y + stepSize;
-			
-			
-			List<Particle> nucleusChainParticles = new LinkedList<Particle>();
-			List<Spring> nucleusChainSprings = new LinkedList<Spring>();
-			
-//			System.out.println("width = " + winsize.width);
-//			System.out.println("height = " + winsize.height);
-			
-			//  the right half of the nucleus membrane
-			for(int y = (int)yNucleusOrigin; y <= (winsize.height-150); y = y + 10){
-				int yWin = y - (int)yMid;
-				int yPos = yWin * yWin;
-				double b2 = (winsize.height / 2) - 150;
-				b2 *= b2;
-				double a = 150;
-				double yFrac = (double) yPos/b2;
-				int x = (int) (Math.sqrt(1 - yFrac) * a);
-				
-				Particle particleMembrane = new Particle(x+xMid, y, 0, 0);
-				
-				//  add the particles to the list
-				nucleusChainParticles.add(particleMembrane);
-				
-				//  (x^2/150^2)  +  (y^2/((winsize.height-150)^2))  =   1
-			}
-			
-			//  the left half of the nucleus membrane
-			List<Particle> mirrorListTemp = new LinkedList<Particle>();
-			for(int i=nucleusChainParticles.size()-2; i>=0; i--){		//  note: skip the point at the apex
-				double xMirror = (-1 * (nucleusChainParticles.get(i).p.x - xMid)) + xMid;
-				double yMirror = nucleusChainParticles.get(i).p.y;
-				Particle mirrorParticle = new Particle(xMirror, yMirror, 0, 0);
-				mirrorListTemp.add(mirrorParticle);
-			}
-			for(int i=0; i<mirrorListTemp.size(); i++){
-				nucleusChainParticles.add(mirrorListTemp.get(i));
-			}
-			mirrorListTemp = null;
-			
-			particles.addAll(nucleusChainParticles);
-			
-			
-			//  attach the last particle of the MT chain to the first particle of the nucleus membrane
-			Spring MTnucleusAttachSpringFirst = new Spring(nucleusAttachmentParticle, nucleusChainParticles.get(0), k, b);
-			MTnucleusAttachSpringFirst.l0 = nucleusSpringLength;
-			MTnucleusAttachSpringFirst.setK(nucleusSpringK);
-			MTnucleusAttachSpringFirst.setB(nucleusSpringB);
-			
-			springs.add(MTnucleusAttachSpringFirst);
-			
-			//  attach the last particle of the MT chain to the last particle of the nucleus membrane
-			Spring MTnucleusAttachSpringLast = new Spring(nucleusAttachmentParticle, nucleusChainParticles.get(nucleusChainParticles.size()-1), k, b);
-			MTnucleusAttachSpringLast.l0 = nucleusSpringLength;
-			MTnucleusAttachSpringLast.setK(nucleusSpringK);
-			MTnucleusAttachSpringLast.setB(nucleusSpringB);
-			
-			springs.add(MTnucleusAttachSpringLast);
-			
-			//  create the springs between the particles of the nuclear membrane
-			List<Spring> nucleusSprings = new LinkedList<Spring>();
-			for(int i=0; i<nucleusChainParticles.size()-1; i++){
-				Spring nucleusSpring = new Spring(nucleusChainParticles.get(i), nucleusChainParticles.get(i+1), k, b);
-				nucleusSpring.l0 = nucleusSpringLength;
-				nucleusSpring.setK(nucleusSpringK);
-				nucleusSpring.setB(nucleusSpringB);
-				
-				nucleusSprings.add(nucleusSpring);
-			}
-			
-			springs.addAll(nucleusSprings);
 							
 			break;
 		case 6: // structural beam
@@ -563,6 +426,111 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(innerMembrane);
 				particles.addAll(outterMembrane);
 				
+				//NUCLEUS
+				yTranspose = 0;
+				List<Particle> innerNuc = new LinkedList<Particle>();
+				List<Particle> outerNuc = new LinkedList<Particle>();
+				
+				//Coordinates of the center of the window
+				
+
+				System.out.println(x0);
+				System.out.println(y0);
+				
+				//Part Creating my ellipse
+				counter = 0;
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+					counter++;
+					double B = ((winsize.height/2)-220);
+					double A = 80.0;
+					int x = (int)(A*Math.cos(t));
+					int y = (int)(B*Math.sin(t));
+					//Creating my particles at the wanted position
+					pF = new Particle(x+x0,(y+y0)+yTranspose, 0, 0);
+					//Addind those particles to the list
+					innerNuc.add(pF);	
+				}
+				
+				counter = 0;
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+					counter++;
+					double B = ((winsize.height/2)-200);
+					double A = 100.0;
+					int x = (int)(A*Math.cos(t));
+					int y = (int)(B*Math.sin(t));
+					//Creating my particles at the wanted position
+					pF = new Particle(x+x0,(y+y0)+yTranspose, 0, 0);
+					//Addind those particles to the list
+
+					outerNuc.add(pF);	
+					
+				}
+				springs.add(new Spring(outerNuc.get(outerNuc.size()-1),innerNuc.get(0),k,b));
+				springs.add(new Spring(outerNuc.get(0),innerNuc.get(innerNuc.size()-1),k,b));
+				springs.add(new Spring(innerNuc.get(0),innerNuc.get(innerNuc.size()-1),k,b));
+				springs.add(new Spring(outerNuc.get(outerNuc.size()-1),outerNuc.get(0),k,b));
+				
+				for(int i = 0; i < outerNuc.size(); i++){
+					springs.add(new Spring(outerNuc.get(i),innerNuc.get(i),k,b));
+					if(i+1 < outerNuc.size()){
+						springs.add(new Spring(outerNuc.get(i),outerNuc.get(i+1),k,b));
+						springs.add(new Spring(innerNuc.get(i),innerNuc.get(i+1),k,b));
+					}
+					if(i+1 < innerNuc.size()){
+						springs.add(new Spring(outerNuc.get(i),innerNuc.get(i+1),k,b));
+					}
+					if(i+1 < outerNuc.size()){
+						springs.add(new Spring(outerNuc.get(i+1),innerNuc.get(i),k,b));
+					}
+				}
+				
+				particles.addAll(innerNuc);
+				particles.addAll(outerNuc);
+				
+				//outerNuc.get(21)
+				//bps.get(14)
+				
+				//  the gap between subsequent particles in the chain
+				int stepSize = 10;
+				
+				LinkedList<Particle> MTchainParticles = new LinkedList<Particle>();
+				LinkedList<Spring> MTchainSprings = new LinkedList<Spring>();
+				
+				int numberOfParticlesInChain = 16;
+				
+				Particle lastParticle = bps.get(14);		//  y-coordinate of attachment point
+				double lastY = lastParticle.p.y;
+				
+				for(int i=0; i<numberOfParticlesInChain; i++){
+					
+					Particle newParticle;
+					Spring newSpring;
+					
+					double newY = lastY+stepSize;
+					newParticle = new Particle(x0, newY, 0, 0);
+					
+					newSpring = new Spring(lastParticle, newParticle, k, b);
+					
+					newSpring.l0 = stepSize;
+					newSpring.setK(stepSize);
+					newSpring.setB(1);
+					
+					MTchainParticles.add(newParticle);
+					MTchainSprings.add(newSpring);
+					
+					
+					lastY = newY;
+					lastParticle = newParticle;
+				}
+				particles.addAll(MTchainParticles);
+				springs.addAll(MTchainSprings);
+
+				
+				//  attach the lastParticle to the top of the nucleus membrane
+				Spring newSpring = new Spring(lastParticle, outerNuc.get(21), k, b);
+				springs.add(newSpring);
+				
+				
 				break;
 				
 				
@@ -713,6 +681,110 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(OuterRingBps);
 				particles.addAll(innerMembrane);
 				particles.addAll(outterMembrane);
+				
+				
+				//NUCLEUS
+				yTranspose = 0;
+				innerNuc = new LinkedList<Particle>();
+				outerNuc = new LinkedList<Particle>();
+				
+				//Coordinates of the center of the window
+				
+
+				System.out.println(x0);
+				System.out.println(y0);
+				
+				//Part Creating my ellipse
+				counter = 0;
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+					counter++;
+					double B = ((winsize.height/2)-220);
+					double A = 80.0;
+					int x = (int)(A*Math.cos(t));
+					int y = (int)(B*Math.sin(t));
+					//Creating my particles at the wanted position
+					pF = new Particle(x+x0,(y+y0)+yTranspose, 0, 0);
+					//Addind those particles to the list
+					innerNuc.add(pF);	
+				}
+				
+				counter = 0;
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+					counter++;
+					double B = ((winsize.height/2)-200);
+					double A = 100.0;
+					int x = (int)(A*Math.cos(t));
+					int y = (int)(B*Math.sin(t));
+					//Creating my particles at the wanted position
+					pF = new Particle(x+x0,(y+y0)+yTranspose, 0, 0);
+					//Addind those particles to the list
+
+					outerNuc.add(pF);	
+					
+				}
+				springs.add(new Spring(outerNuc.get(outerNuc.size()-1),innerNuc.get(0),k,b));
+				springs.add(new Spring(outerNuc.get(0),innerNuc.get(innerNuc.size()-1),k,b));
+				springs.add(new Spring(innerNuc.get(0),innerNuc.get(innerNuc.size()-1),k,b));
+				springs.add(new Spring(outerNuc.get(outerNuc.size()-1),outerNuc.get(0),k,b));
+				
+				for(int i = 0; i < outerNuc.size(); i++){
+					springs.add(new Spring(outerNuc.get(i),innerNuc.get(i),k,b));
+					if(i+1 < outerNuc.size()){
+						springs.add(new Spring(outerNuc.get(i),outerNuc.get(i+1),k,b));
+						springs.add(new Spring(innerNuc.get(i),innerNuc.get(i+1),k,b));
+					}
+					if(i+1 < innerNuc.size()){
+						springs.add(new Spring(outerNuc.get(i),innerNuc.get(i+1),k,b));
+					}
+					if(i+1 < outerNuc.size()){
+						springs.add(new Spring(outerNuc.get(i+1),innerNuc.get(i),k,b));
+					}
+				}
+				
+				particles.addAll(innerNuc);
+				particles.addAll(outerNuc);
+				
+				//outerNuc.get(21)
+				//bps.get(14)
+				
+				//  the gap between subsequent particles in the chain
+				stepSize = 10;
+				
+				MTchainParticles = new LinkedList<Particle>();
+				MTchainSprings = new LinkedList<Spring>();
+				
+				numberOfParticlesInChain = 16;
+				
+				lastParticle = bps.get(14);		//  y-coordinate of attachment point
+				lastY = lastParticle.p.y;
+				
+				for(int i=0; i<numberOfParticlesInChain; i++){
+					
+					Particle newParticle;
+					
+					double newY = lastY+stepSize;
+					newParticle = new Particle(x0, newY, 0, 0);
+					
+					newSpring = new Spring(lastParticle, newParticle, k, b);
+					
+					newSpring.l0 = stepSize;
+					newSpring.setK(stepSize);
+					newSpring.setB(1);
+					
+					MTchainParticles.add(newParticle);
+					MTchainSprings.add(newSpring);
+					
+					
+					lastY = newY;
+					lastParticle = newParticle;
+				}
+				particles.addAll(MTchainParticles);
+				springs.addAll(MTchainSprings);
+
+				
+				//  attach the lastParticle to the top of the nucleus membrane
+				newSpring = new Spring(lastParticle, outerNuc.get(21), k, b);
+				springs.add(newSpring);
 				
 				break;
 				
@@ -904,6 +976,69 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(OuterRingBps);
 				particles.addAll(innerMembrane);
 				particles.addAll(outterMembrane);
+				
+				
+				
+				//NUCLEUS
+				yTranspose = 190;
+				innerNuc = new LinkedList<Particle>();
+				outerNuc = new LinkedList<Particle>();
+				
+				//Coordonates of the center of the window
+				
+
+				System.out.println(x0);
+				System.out.println(y0);
+				
+				//Part Creating my ellipse
+				counter = 0;
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+					counter++;
+					double B = ((winsize.height/2)-220);
+					double A = 80.0;
+					int x = (int)(A*Math.cos(t));
+					int y = (int)(B*Math.sin(t));
+					//Creating my particles at the wanted position
+					pF = new Particle(x+x0,(y+y0)+yTranspose, 0, 0);
+					//Addind those particles to the list
+					innerNuc.add(pF);	
+				}
+				
+				counter = 0;
+				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+					counter++;
+					double B = ((winsize.height/2)-200);
+					double A = 100.0;
+					int x = (int)(A*Math.cos(t));
+					int y = (int)(B*Math.sin(t));
+					//Creating my particles at the wanted position
+					pF = new Particle(x+x0,(y+y0)+yTranspose, 0, 0);
+					//Addind those particles to the list
+
+					outerNuc.add(pF);	
+					
+				}
+				springs.add(new Spring(outerNuc.get(outerNuc.size()-1),innerNuc.get(0),k,b));
+				springs.add(new Spring(outerNuc.get(0),innerNuc.get(innerNuc.size()-1),k,b));
+				springs.add(new Spring(innerNuc.get(0),innerNuc.get(innerNuc.size()-1),k,b));
+				springs.add(new Spring(outerNuc.get(outerNuc.size()-1),outerNuc.get(0),k,b));
+				
+				for(int i = 0; i < outerNuc.size(); i++){
+					springs.add(new Spring(outerNuc.get(i),innerNuc.get(i),k,b));
+					if(i+1 < outerNuc.size() && (i!=3)){
+						springs.add(new Spring(outerNuc.get(i),outerNuc.get(i+1),k,b));
+						springs.add(new Spring(innerNuc.get(i),innerNuc.get(i+1),k,b));
+					}
+					if(i+1 < innerNuc.size() && (i!=3)){
+						springs.add(new Spring(outerNuc.get(i),innerNuc.get(i+1),k,b));
+					}
+					if(i+1 < outerNuc.size() && (i!=3)){
+						springs.add(new Spring(outerNuc.get(i+1),innerNuc.get(i),k,b));
+					}
+				}
+				
+				particles.addAll(innerNuc);
+				particles.addAll(outerNuc);
 				
 				break;
 				

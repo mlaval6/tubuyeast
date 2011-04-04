@@ -226,6 +226,7 @@ public class ParticleSystem implements SceneGraphNode {
 			}
 		}
 
+		
 		// Add pulling to motor proteins
 		for (Particle p: particles) {
 			if (p instanceof MotorParticle) {

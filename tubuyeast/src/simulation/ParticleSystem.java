@@ -44,7 +44,11 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public ArrayList<Particle> particles = new ArrayList<Particle>();
 
+	public int budDiameter = 80;
+	
 	private List<Spring> springs = new LinkedList<Spring>();
+	
+	
 
 	private Dimension wsize;
 

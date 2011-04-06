@@ -137,6 +137,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
             for ( int i = 0; i < substeps.getValue(); i++ ) {
                 system.step( stepsize.getValue());                
             }
+            growBud();
             stepRequested = false;        
         }
 	}
@@ -315,8 +316,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > 4 && counter < 12){
 						continue;
 					}
-					double B = ((simsize.height/2)-220);
-					double A = 80.0;
+					double B = system.budDiameter;
+					double A = system.budDiameter;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position

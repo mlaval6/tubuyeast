@@ -137,7 +137,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
             for ( int i = 0; i < substeps.getValue(); i++ ) {
                 system.step( stepsize.getValue());                
             }
-            growBud();
+            
             stepRequested = false;        
         }
 	}

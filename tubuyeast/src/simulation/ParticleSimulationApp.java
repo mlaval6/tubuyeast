@@ -305,7 +305,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				List<Particle> innerMembrane = new LinkedList<Particle>();
 				List<Particle> outterMembrane = new LinkedList<Particle>();
 				Particle pF, pS;
-				//Coordonates of the center of the window
+				//Coordinates of the center of the window
 				int x0 = (int) (simsize.width / 2.0);
 				int y0 = (int) (simsize.height / 2.0) + 100;
 
@@ -561,6 +561,39 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				//  attach the lastParticle to the top of the nucleus membrane
 				newSpring = new Spring(lastParticle, outerNuc.get(21), k, b);
 				springs.add(newSpring);
+				
+				
+				
+				
+				//  creating the MT chain from below the nucleus to the inside membrane of the mother cell
+				Particle previousParticle = outerNuc.get(7);
+				Particle membraneAttachmentPoint = innerMembrane.get(17);
+				
+				int numberOfParticlesInMTchain = 8;
+				double distance = membraneAttachmentPoint.p.y - previousParticle.p.y;
+				double kForMTchain2 = k;
+				double bForMTchain2 = b;
+				double stepSizeMTchain2 = distance / (double)numberOfParticlesInMTchain;
+				
+				
+				
+				LinkedList<Particle> MTparticleList2 = new LinkedList<Particle>();
+				LinkedList<Spring> MTspringList2 = new LinkedList<Spring>();
+				for(int i=0; i<numberOfParticlesInMTchain-1; i++){
+					Particle newParticleMTchain = new Particle(previousParticle.p.x, previousParticle.p.y + stepSizeMTchain2, 0, 0);
+					Spring newSpringMTchain = new Spring(previousParticle, newParticleMTchain, kForMTchain2, bForMTchain2);
+					
+					MTparticleList2.add(newParticleMTchain);
+					MTspringList2.add(newSpringMTchain);
+					
+					previousParticle = newParticleMTchain;
+				}
+				
+				Spring newLastSpring = new Spring(previousParticle, membraneAttachmentPoint, kForMTchain2, bForMTchain2);
+				MTspringList2.add(newLastSpring);
+				
+				particles.addAll(MTparticleList2);
+				springs.addAll(MTspringList2);
 				
 				
 				break;

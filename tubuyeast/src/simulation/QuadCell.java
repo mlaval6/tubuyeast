@@ -4,7 +4,7 @@ import javax.vecmath.Point2d;
 
 public class QuadCell {
 	
-	private Particle child;
+	private Particle child = null;
 	boolean leaf;
 	private Point2d pll, pur, center;
 	private QuadCell SW = null, SE = null, NE = null, NW = null, parent = null;
@@ -36,6 +36,10 @@ public class QuadCell {
 		if(leaf && child == null) this.child = p;
 		else{
 			if(leaf && child != null){	// leaf with a child
+				if(child.p.x == p.p.x && child.p.y == p.p.y){
+					System.out.println("Attempting to put 2 points at exact same coordinate, BAD!");
+					return;
+				}
 				this.leaf = false;
 				InsertIntoBestQuadCell(this.child);
 				this.child = null;

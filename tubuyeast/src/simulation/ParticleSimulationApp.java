@@ -142,8 +142,6 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 	}
 	
 	private void growBud(){
-		system.setBudDiameter(system.getBudDiameter() + 1);
-		System.out.println(system.getBudDiameter());
 		
 	}
 	
@@ -321,8 +319,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > 4 && counter < 12){
 						continue;
 					}
-					double B = system.getBudDiameter();
-					double A = system.getBudDiameter();
+					double B = 80;
+					double A = 80;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position

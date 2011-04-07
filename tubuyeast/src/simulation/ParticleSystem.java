@@ -449,16 +449,7 @@ public class ParticleSystem implements SceneGraphNode {
 		return b.getValue();
 	}
 	
-	public int getBudDiameter(){
-		return budDiameter;
-	}
-	
-	public void setBudDiameter(int newBudDiameter){
-		budDiameter = newBudDiameter;
-	}
 	
 	
-	public List<Particle> getBudParticles(){
-		return budParticles;
-	}
+	
 }

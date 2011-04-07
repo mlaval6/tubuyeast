@@ -234,8 +234,8 @@ public class ParticleSystem implements SceneGraphNode {
 		}
 		
 		
-		/* OLD COULOMB FORCES
-		for (Particle p1: particles) {
+		// OLD COULOMB FORCES
+		/*for (Particle p1: particles) {
 			if (!p1.collidable) continue;
 			for (Particle p2: particles) {
 				if (p1 == p2 || !p2.collidable) continue;
@@ -247,13 +247,14 @@ public class ParticleSystem implements SceneGraphNode {
 		
 		for (Particle p1: particles) {
 			if (!p1.collidable) continue;
-			ArrayList<Particle> closeParticles = qt.getParticles(p1, 20);
+			ArrayList<Particle> closeParticles = qt.getParticles(p1, 60);
 			for (Particle p2: closeParticles) {
 				if (p1 == p2 || !p2.collidable) continue;
 				
 				CoulombForce.apply(p1, p2);
 			}
 		}
+		
 		
 		// Add pulling to motor proteins
 		for (Particle p: particles) {

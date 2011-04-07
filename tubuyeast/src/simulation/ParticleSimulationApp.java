@@ -137,11 +137,16 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
             for ( int i = 0; i < substeps.getValue(); i++ ) {
                 system.step( stepsize.getValue());                
             }
-            
             stepRequested = false;        
         }
 	}
-
+	
+	private void growBud(){
+		system.setBudDiameter(system.getBudDiameter() + 1);
+		System.out.println(system.getBudDiameter());
+		
+	}
+	
 	public JPanel getControls() {
         VerticalFlowPanel vfp = new VerticalFlowPanel();
 
@@ -297,8 +302,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				break;
 			case 3: // COMPLETE CELL
 				int yTranspose = 190;
-				List<Particle> bps = new LinkedList<Particle>();
-				List<Particle> OuterRingBps = new LinkedList<Particle>();
+				List<Particle> budInnerMembrane = new LinkedList<Particle>();
+				List<Particle> budOuterMembrane = new LinkedList<Particle>();
 				List<Particle> innerMembrane = new LinkedList<Particle>();
 				List<Particle> outterMembrane = new LinkedList<Particle>();
 				Particle pF, pS;
@@ -316,15 +321,15 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					if(counter > 4 && counter < 12){
 						continue;
 					}
-					double B = system.budDiameter;
-					double A = system.budDiameter;
+					double B = system.getBudDiameter();
+					double A = system.getBudDiameter();
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0)-yTranspose, 0, 0);
 					pF.pinned = true;
 					//Addind those particles to the list
-					bps.add(pF);	
+					budInnerMembrane.add(pF);	
 				}
 				
 				counter = 0;
@@ -342,25 +347,25 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					pF.pinned = true;
 					//Addind those particles to the list
 
-					OuterRingBps.add(pF);	
+					budOuterMembrane.add(pF);	
 					
 				}
-				springs.add(new Spring(OuterRingBps.get(OuterRingBps.size()-1),bps.get(0),k,b));
-				springs.add(new Spring(OuterRingBps.get(0),bps.get(bps.size()-1),k,b));
-				springs.add(new Spring(bps.get(0),bps.get(bps.size()-1),k,b));
-				springs.add(new Spring(OuterRingBps.get(OuterRingBps.size()-1),OuterRingBps.get(0),k,b));
+				springs.add(new Spring(budOuterMembrane.get(budOuterMembrane.size()-1),budInnerMembrane.get(0),k,b));
+				springs.add(new Spring(budOuterMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+				springs.add(new Spring(budInnerMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+				springs.add(new Spring(budOuterMembrane.get(budOuterMembrane.size()-1),budOuterMembrane.get(0),k,b));
 				
-				for(int i = 0; i < OuterRingBps.size(); i++){
-					springs.add(new Spring(OuterRingBps.get(i),bps.get(i),k,b));
-					if(i+1 < OuterRingBps.size() && (i!=3)){
-						springs.add(new Spring(OuterRingBps.get(i),OuterRingBps.get(i+1),k,b));
-						springs.add(new Spring(bps.get(i),bps.get(i+1),k,b));
+				for(int i = 0; i < budOuterMembrane.size(); i++){
+					springs.add(new Spring(budOuterMembrane.get(i),budInnerMembrane.get(i),k,b));
+					if(i+1 < budOuterMembrane.size() && (i!=3)){
+						springs.add(new Spring(budOuterMembrane.get(i),budOuterMembrane.get(i+1),k,b));
+						springs.add(new Spring(budInnerMembrane.get(i),budInnerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < bps.size() && (i!=3)){
-						springs.add(new Spring(OuterRingBps.get(i),bps.get(i+1),k,b));
+					if(i+1 < budInnerMembrane.size() && (i!=3)){
+						springs.add(new Spring(budOuterMembrane.get(i),budInnerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < OuterRingBps.size() && (i!=3)){
-						springs.add(new Spring(OuterRingBps.get(i+1),bps.get(i),k,b));
+					if(i+1 < budOuterMembrane.size() && (i!=3)){
+						springs.add(new Spring(budOuterMembrane.get(i+1),budInnerMembrane.get(i),k,b));
 					}
 				}
 				
@@ -424,20 +429,20 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					}
 				}
 				
-				springs.add(new Spring(outterMembrane.get(46),OuterRingBps.get(5),k,b));
-				springs.add(new Spring(outterMembrane.get(46),OuterRingBps.get(4),k,b));
-				springs.add(new Spring(innerMembrane.get(46),OuterRingBps.get(5),k,b));
-				springs.add(new Spring(innerMembrane.get(46),OuterRingBps.get(4),k,b));
+				springs.add(new Spring(outterMembrane.get(46),budOuterMembrane.get(5),k,b));
+				springs.add(new Spring(outterMembrane.get(46),budOuterMembrane.get(4),k,b));
+				springs.add(new Spring(innerMembrane.get(46),budOuterMembrane.get(5),k,b));
+				springs.add(new Spring(innerMembrane.get(46),budOuterMembrane.get(4),k,b));
 				
-				springs.add(new Spring(outterMembrane.get(47),OuterRingBps.get(3),k,b));
-				springs.add(new Spring(outterMembrane.get(47),OuterRingBps.get(2),k,b));
-				springs.add(new Spring(innerMembrane.get(47),OuterRingBps.get(3),k,b));
-				springs.add(new Spring(innerMembrane.get(47),OuterRingBps.get(2),k,b));
+				springs.add(new Spring(outterMembrane.get(47),budOuterMembrane.get(3),k,b));
+				springs.add(new Spring(outterMembrane.get(47),budOuterMembrane.get(2),k,b));
+				springs.add(new Spring(innerMembrane.get(47),budOuterMembrane.get(3),k,b));
+				springs.add(new Spring(innerMembrane.get(47),budOuterMembrane.get(2),k,b));
 
 				
 				//Putting my list of particles in this list which I guess is then drawn on the window
-				particles.addAll(bps);
-				particles.addAll(OuterRingBps);
+				particles.addAll(budInnerMembrane);
+				particles.addAll(budOuterMembrane);
 				particles.addAll(innerMembrane);
 				particles.addAll(outterMembrane);
 				
@@ -503,7 +508,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(outerNuc);
 				
 				//outerNuc.get(21)
-				//bps.get(14)
+				//budInnerMembrane.get(14)
 				
 				//  the gap between subsequent particles in the chain
 				int stepSize = 10;
@@ -513,7 +518,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				int numberOfParticlesInChain = 16;
 				
-				Particle lastParticle = bps.get(14);		//  y-coordinate of attachment point
+				Particle lastParticle = budInnerMembrane.get(14);		//  y-coordinate of attachment point
 				double lastY = lastParticle.p.y;
 				
 				// TODO: set this in UI
@@ -565,8 +570,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 			case 4: // pendulum
 				yTranspose = 60;
-				bps = new LinkedList<Particle>();
-				OuterRingBps = new LinkedList<Particle>();
+				budInnerMembrane = new LinkedList<Particle>();
+				budOuterMembrane = new LinkedList<Particle>();
 				innerMembrane = new LinkedList<Particle>();
 				outterMembrane = new LinkedList<Particle>();
 				
@@ -593,7 +598,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0)-yTranspose, 0, 0);
 					//Addind those particles to the list
-					bps.add(pF);	
+					budInnerMembrane.add(pF);	
 				}
 				
 			
@@ -612,27 +617,27 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0)-yTranspose, 0, 0);
 					//Addind those particles to the list
-					OuterRingBps.add(pF);	
+					budOuterMembrane.add(pF);	
 				}
 
 				
 				
-				springs.add(new Spring(OuterRingBps.get(OuterRingBps.size()-1),bps.get(0),k,b));
-				springs.add(new Spring(OuterRingBps.get(0),bps.get(bps.size()-1),k,b));
-				springs.add(new Spring(bps.get(0),bps.get(bps.size()-1),k,b));
-				springs.add(new Spring(OuterRingBps.get(OuterRingBps.size()-1),OuterRingBps.get(0),k,b));
+				springs.add(new Spring(budOuterMembrane.get(budOuterMembrane.size()-1),budInnerMembrane.get(0),k,b));
+				springs.add(new Spring(budOuterMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+				springs.add(new Spring(budInnerMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+				springs.add(new Spring(budOuterMembrane.get(budOuterMembrane.size()-1),budOuterMembrane.get(0),k,b));
 				
-				for(int i = 0; i < OuterRingBps.size(); i++){
-					springs.add(new Spring(OuterRingBps.get(i),bps.get(i),k,b));
-					if(i+1 < OuterRingBps.size() && (i!=11)){
-						springs.add(new Spring(OuterRingBps.get(i),OuterRingBps.get(i+1),k,b));
-						springs.add(new Spring(bps.get(i),bps.get(i+1),k,b));
+				for(int i = 0; i < budOuterMembrane.size(); i++){
+					springs.add(new Spring(budOuterMembrane.get(i),budInnerMembrane.get(i),k,b));
+					if(i+1 < budOuterMembrane.size() && (i!=11)){
+						springs.add(new Spring(budOuterMembrane.get(i),budOuterMembrane.get(i+1),k,b));
+						springs.add(new Spring(budInnerMembrane.get(i),budInnerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < bps.size() && (i!=11)){
-						springs.add(new Spring(OuterRingBps.get(i),bps.get(i+1),k,b));
+					if(i+1 < budInnerMembrane.size() && (i!=11)){
+						springs.add(new Spring(budOuterMembrane.get(i),budInnerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < OuterRingBps.size() && (i!=11)){
-						springs.add(new Spring(OuterRingBps.get(i+1),bps.get(i),k,b));
+					if(i+1 < budOuterMembrane.size() && (i!=11)){
+						springs.add(new Spring(budOuterMembrane.get(i+1),budInnerMembrane.get(i),k,b));
 					}
 				}
 
@@ -693,21 +698,21 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					}
 				}
 				
-				springs.add(new Spring(outterMembrane.get(10),OuterRingBps.get(13),k,b));
-				springs.add(new Spring(outterMembrane.get(10),OuterRingBps.get(12),k,b));
-				springs.add(new Spring(innerMembrane.get(10),OuterRingBps.get(13),k,b));
-				springs.add(new Spring(innerMembrane.get(10),OuterRingBps.get(12),k,b));
+				springs.add(new Spring(outterMembrane.get(10),budOuterMembrane.get(13),k,b));
+				springs.add(new Spring(outterMembrane.get(10),budOuterMembrane.get(12),k,b));
+				springs.add(new Spring(innerMembrane.get(10),budOuterMembrane.get(13),k,b));
+				springs.add(new Spring(innerMembrane.get(10),budOuterMembrane.get(12),k,b));
 				
-				springs.add(new Spring(outterMembrane.get(11),OuterRingBps.get(11),k,b));
-				springs.add(new Spring(outterMembrane.get(11),OuterRingBps.get(10),k,b));
-				springs.add(new Spring(innerMembrane.get(11),OuterRingBps.get(11),k,b));
-				springs.add(new Spring(innerMembrane.get(11),OuterRingBps.get(10),k,b));
+				springs.add(new Spring(outterMembrane.get(11),budOuterMembrane.get(11),k,b));
+				springs.add(new Spring(outterMembrane.get(11),budOuterMembrane.get(10),k,b));
+				springs.add(new Spring(innerMembrane.get(11),budOuterMembrane.get(11),k,b));
+				springs.add(new Spring(innerMembrane.get(11),budOuterMembrane.get(10),k,b));
 			
 
 				
 				//Putting my list of particles in this list which I guess is then drawn on the window
-				particles.addAll(bps);
-				particles.addAll(OuterRingBps);
+				particles.addAll(budInnerMembrane);
+				particles.addAll(budOuterMembrane);
 				particles.addAll(innerMembrane);
 				particles.addAll(outterMembrane);
 				
@@ -774,7 +779,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(outerNuc);
 				
 				//outerNuc.get(21)
-				//bps.get(14)
+				//budInnerMembrane.get(14)
 				
 				//  the gap between subsequent particles in the chain
 				stepSize = 10;
@@ -784,7 +789,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				numberOfParticlesInChain = 37;
 				
-				lastParticle = bps.get(40);		//  y-coordinate of attachment point
+				lastParticle = budInnerMembrane.get(40);		//  y-coordinate of attachment point
 				lastY = lastParticle.p.y;
 				
 				for(int i=0; i<numberOfParticlesInChain; i++){
@@ -822,11 +827,11 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 /*				int x0 = (int) (winsize.width / 2.0);
 				int y0 = (int) (winsize.height / 2.0);
 				double r = 100;
-				List<Particle> bps = new LinkedList<Particle>();
+				List<Particle> budInnerMembrane = new LinkedList<Particle>();
 
 				Particle pi, pn, po;
 				pi = new Particle(x0 + r * Math.cos(0), y0 + r * Math.sin(0), 0, 0);
-				bps.add(pi);
+				budInnerMembrane.add(pi);
 				po = pi;
 
 				double dt = 2 * Math.PI / 8;
@@ -841,14 +846,14 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 						pn.heavy = true;
 					}
 
-					bps.add(pn);
+					budInnerMembrane.add(pn);
 
 					po = pn;
 				}
 				springs.add(new Spring(pi, po, k, b));
 
-				for (Particle p1l : bps) {
-					for (Particle p2l : bps) {
+				for (Particle p1l : budInnerMembrane) {
+					for (Particle p2l : budInnerMembrane) {
 						if (p1l != p2l)
 							springs.add(new Spring(p1l, p2l, k, b));
 					}
@@ -858,8 +863,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 */
 				// Lavallee's Code
 				//List of particles I need to fill
-				bps = new LinkedList<Particle>();
-				OuterRingBps = new LinkedList<Particle>();
+				budInnerMembrane = new LinkedList<Particle>();
+				budOuterMembrane = new LinkedList<Particle>();
 				innerMembrane = new LinkedList<Particle>();
 				outterMembrane = new LinkedList<Particle>();
 				
@@ -885,7 +890,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0), 0, 0);
 					//Addind those particles to the list
-					bps.add(pF);	
+					budInnerMembrane.add(pF);	
 				}
 				
 			
@@ -904,27 +909,27 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					//Creating my particles at the wanted position
 					pF = new Particle(x+x0,(y+y0), 0, 0);
 					//Addind those particles to the list
-					OuterRingBps.add(pF);	
+					budOuterMembrane.add(pF);	
 				}
 
 				
 				
-				springs.add(new Spring(OuterRingBps.get(OuterRingBps.size()-1),bps.get(0),k,b));
-				springs.add(new Spring(OuterRingBps.get(0),bps.get(bps.size()-1),k,b));
-				springs.add(new Spring(bps.get(0),bps.get(bps.size()-1),k,b));
-				springs.add(new Spring(OuterRingBps.get(OuterRingBps.size()-1),OuterRingBps.get(0),k,b));
+				springs.add(new Spring(budOuterMembrane.get(budOuterMembrane.size()-1),budInnerMembrane.get(0),k,b));
+				springs.add(new Spring(budOuterMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+				springs.add(new Spring(budInnerMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+				springs.add(new Spring(budOuterMembrane.get(budOuterMembrane.size()-1),budOuterMembrane.get(0),k,b));
 				
-				for(int i = 0; i < OuterRingBps.size(); i++){
-					springs.add(new Spring(OuterRingBps.get(i),bps.get(i),k,b));
-					if(i+1 < OuterRingBps.size() && (i!=(budBreakPoint-1))){
-						springs.add(new Spring(OuterRingBps.get(i),OuterRingBps.get(i+1),k,b));
-						springs.add(new Spring(bps.get(i),bps.get(i+1),k,b));
+				for(int i = 0; i < budOuterMembrane.size(); i++){
+					springs.add(new Spring(budOuterMembrane.get(i),budInnerMembrane.get(i),k,b));
+					if(i+1 < budOuterMembrane.size() && (i!=(budBreakPoint-1))){
+						springs.add(new Spring(budOuterMembrane.get(i),budOuterMembrane.get(i+1),k,b));
+						springs.add(new Spring(budInnerMembrane.get(i),budInnerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < bps.size() && (i!= (budBreakPoint-1))){
-						springs.add(new Spring(OuterRingBps.get(i),bps.get(i+1),k,b));
+					if(i+1 < budInnerMembrane.size() && (i!= (budBreakPoint-1))){
+						springs.add(new Spring(budOuterMembrane.get(i),budInnerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < OuterRingBps.size() && (i!=(budBreakPoint-1))){
-						springs.add(new Spring(OuterRingBps.get(i+1),bps.get(i),k,b));
+					if(i+1 < budOuterMembrane.size() && (i!=(budBreakPoint-1))){
+						springs.add(new Spring(budOuterMembrane.get(i+1),budInnerMembrane.get(i),k,b));
 					}
 				}
 
@@ -989,20 +994,20 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 					}
 				}
 				
-				springs.add(new Spring(outterMembrane.get(indexBreak),OuterRingBps.get((budBreakPoint+1)),k,b));
-				springs.add(new Spring(outterMembrane.get(indexBreak),OuterRingBps.get((budBreakPoint)),k,b));
-				springs.add(new Spring(innerMembrane.get(indexBreak),OuterRingBps.get((budBreakPoint+1)),k,b));
-				springs.add(new Spring(innerMembrane.get(indexBreak),OuterRingBps.get((budBreakPoint)),k,b));
+				springs.add(new Spring(outterMembrane.get(indexBreak),budOuterMembrane.get((budBreakPoint+1)),k,b));
+				springs.add(new Spring(outterMembrane.get(indexBreak),budOuterMembrane.get((budBreakPoint)),k,b));
+				springs.add(new Spring(innerMembrane.get(indexBreak),budOuterMembrane.get((budBreakPoint+1)),k,b));
+				springs.add(new Spring(innerMembrane.get(indexBreak),budOuterMembrane.get((budBreakPoint)),k,b));
 				
-				springs.add(new Spring(outterMembrane.get(indexBreak+1),OuterRingBps.get(budBreakPoint-1),k,b));
-				springs.add(new Spring(outterMembrane.get(indexBreak+1),OuterRingBps.get((budBreakPoint-2)),k,b));
-				springs.add(new Spring(innerMembrane.get(indexBreak+1),OuterRingBps.get(budBreakPoint-1),k,b));
-				springs.add(new Spring(innerMembrane.get(indexBreak+1),OuterRingBps.get((budBreakPoint-2)),k,b));
+				springs.add(new Spring(outterMembrane.get(indexBreak+1),budOuterMembrane.get(budBreakPoint-1),k,b));
+				springs.add(new Spring(outterMembrane.get(indexBreak+1),budOuterMembrane.get((budBreakPoint-2)),k,b));
+				springs.add(new Spring(innerMembrane.get(indexBreak+1),budOuterMembrane.get(budBreakPoint-1),k,b));
+				springs.add(new Spring(innerMembrane.get(indexBreak+1),budOuterMembrane.get((budBreakPoint-2)),k,b));
 			
 
 				//Putting my list of particles in this list which I guess is then drawn on the window
-				particles.addAll(bps);
-				particles.addAll(OuterRingBps);
+				particles.addAll(budInnerMembrane);
+				particles.addAll(budOuterMembrane);
 				particles.addAll(innerMembrane);
 				particles.addAll(outterMembrane);
 				
@@ -1070,7 +1075,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(outerNuc);
 				
 				//outerNuc.get(21)
-				//bps.get(14)
+				//budInnerMembrane.get(14)
 				
 				//  the gap between subsequent particles in the chain
 				stepSize = 10;
@@ -1080,7 +1085,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				numberOfParticlesInChain = 37;
 				
-				lastParticle = bps.get(30);		//  y-coordinate of attachment point
+				lastParticle = budInnerMembrane.get(30);		//  y-coordinate of attachment point
 				lastY = lastParticle.p.y;
 				
 				for(int i=0; i<numberOfParticlesInChain; i++){

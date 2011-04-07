@@ -44,7 +44,11 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public ArrayList<Particle> particles = new ArrayList<Particle>();
 
-	public int budDiameter = 80;
+	private Bud bud = new Bud();
+	
+	//private int budDiameter = 80;
+	
+	//private ArrayList<Particle> budParticles = new ArrayList<Particle>();
 	
 	private List<Spring> springs = new LinkedList<Spring>();
 	
@@ -110,7 +114,11 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public void step(double h) {
 
+		//BUD GROWING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		
 		updateForces();
+		
+		
 		
 		// Collide particles
 		for (Particle p : particles) {
@@ -441,4 +449,16 @@ public class ParticleSystem implements SceneGraphNode {
 		return b.getValue();
 	}
 	
+	public int getBudDiameter(){
+		return budDiameter;
+	}
+	
+	public void setBudDiameter(int newBudDiameter){
+		budDiameter = newBudDiameter;
+	}
+	
+	
+	public List<Particle> getBudParticles(){
+		return budParticles;
+	}
 }

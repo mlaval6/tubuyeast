@@ -215,6 +215,10 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public void updateForces() {
 
+		//Create QuadTree
+		QuadTree qt = new QuadTree(particles, new Point2d(9, 747), new Point2d(792, 10));
+		
+		
 		// Initialize forces to the the gravity force (mg)
 		Vector2d fg = g.isChecked() ? new Vector2d(0, g.getValue())
 				: new Vector2d();
@@ -229,6 +233,8 @@ public class ParticleSystem implements SceneGraphNode {
 			spring.apply();
 		}
 		
+		
+		/* OLD COULOMB FORCES
 		for (Particle p1: particles) {
 			if (!p1.collidable) continue;
 			for (Particle p2: particles) {
@@ -237,7 +243,17 @@ public class ParticleSystem implements SceneGraphNode {
 				CoulombForce.apply(p1, p2);
 			}
 		}
-
+		*/
+		
+		for (Particle p1: particles) {
+			if (!p1.collidable) continue;
+			ArrayList<Particle> closeParticles = qt.getParticles(p1, 20);
+			for (Particle p2: closeParticles) {
+				if (p1 == p2 || !p2.collidable) continue;
+				
+				CoulombForce.apply(p1, p2);
+			}
+		}
 		
 		// Add pulling to motor proteins
 		for (Particle p: particles) {
@@ -280,6 +296,7 @@ public class ParticleSystem implements SceneGraphNode {
 		Particle p = new Particle(x, y, vx, vy);
 		p.q = q.getValue();
 		particles.add(p);
+		//System.out.println(p.p);
 		return p;
 	}
 

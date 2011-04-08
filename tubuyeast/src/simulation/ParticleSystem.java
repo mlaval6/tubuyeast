@@ -254,6 +254,9 @@ public class ParticleSystem implements SceneGraphNode {
 			}
 		*/
 		
+		//END OF OLD COULOMB FORCES
+		
+		
 		// 2. MOHAMED's CODE - if you want to test without it, comment and above OLD COULOMB FORCES
 		for (Particle p1: particles) {
 			if (!p1.collidable) continue;

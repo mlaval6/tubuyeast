@@ -151,6 +151,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 	}
 	
 	private void growBud(){
+		
 		List<Particle> particlesWithoutBud = new ArrayList<Particle>();
 		for(Particle p: system.particles){
 			if (!(p instanceof BudParticle)){
@@ -228,6 +229,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 			budOuterMembrane.add(pF);	
 			
 		}
+		
 		system.springs.add(new BudSpring(budOuterMembrane.get(budOuterMembrane.size()-1),budInnerMembrane.get(0),k,b));
 		system.springs.add(new BudSpring(budOuterMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
 		system.springs.add(new BudSpring(budInnerMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
@@ -247,7 +249,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 			}
 		}
 		
-		
+		/*
 		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(48),budOuterMembrane.get((int)(numberOfBudParticles-12)),k,b));
 		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(48),budInnerMembrane.get((int)(numberOfBudParticles-12)),k,b));
 		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(47),budOuterMembrane.get((int)(numberOfBudParticles-12)),k,b));
@@ -256,9 +258,10 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(49),budInnerMembrane.get((int)(numberOfBudParticles-13)),k,b));
 		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(50),budOuterMembrane.get((int)(numberOfBudParticles-13)),k,b));
 		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(50),budInnerMembrane.get((int)(numberOfBudParticles-13)),k,b));
-		
+		*/
 		system.particles.addAll(budInnerMembrane);
 		system.particles.addAll(budOuterMembrane);
+		
 	}
 	
 	

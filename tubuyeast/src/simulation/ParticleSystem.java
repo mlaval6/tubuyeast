@@ -57,7 +57,7 @@ public class ParticleSystem implements SceneGraphNode {
 	//private ArrayList<Particle> budParticles = new ArrayList<Particle>();
 	
 	public List<Spring> springs = new LinkedList<Spring>();
-	
+	private QuadTree qt;
 	
 
 	private Dimension wsize;
@@ -265,7 +265,7 @@ public class ParticleSystem implements SceneGraphNode {
 		
 		//Create QuadTree
 		swQTcreate.start();
-		QuadTree qt = new QuadTree(particles, new Point2d(9, 747), new Point2d(792, 10));
+		qt = new QuadTree(particles, new Point2d(9, 747), new Point2d(792, 10));
 		swQTcreate.stop();
 		//END OF MOHAMED'S CODE
 		
@@ -408,6 +408,9 @@ public class ParticleSystem implements SceneGraphNode {
 							grabpos.x, grabpos.y), 0, Math.min(
 							wsize.getWidth(), wsize.getHeight()));
 		}
+		
+		if(qt != null)	qt.printBoxes(drawable);
+		
 	}
 
 	public JPanel getControls() {

@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
      * frame should be recorded if recording is enabled
      */
     private boolean stepRequested = false;
-        
+    
     private BooleanParameter run = new BooleanParameter( "run", false );
     
     private DoubleParameter stepsize = new DoubleParameter( "step size", 0.0015, 1e-5, 1 );
@@ -135,15 +136,125 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
     	// if it is running or wants to be stepped
         if ( isRunning() || stepRequested ) {   
             for ( int i = 0; i < substeps.getValue(); i++ ) {
-                system.step( stepsize.getValue());                
+            	//BUD GROWING!
+        		growBud();
+            	system.step( stepsize.getValue());                
             }
             stepRequested = false;        
         }
 	}
 	
 	private void growBud(){
+		List<Particle> particlesWithoutBud = new ArrayList<Particle>();
+		for(Particle p: system.particles){
+			if (!(p instanceof BudParticle)){
+				particlesWithoutBud.add(p);
+			}
+		}
+		system.particles.clear();
+		system.particles.addAll(particlesWithoutBud);
 		
+		List<Spring> springsWithoutBud = new ArrayList<Spring>();
+		for(Spring s: system.springs){
+			if (!(s instanceof BudSpring)){
+				springsWithoutBud.add(s);
+			}
+		}
+		system.springs.clear();
+		system.springs.addAll(springsWithoutBud);
+		
+		
+		if(system.getBud().getaRadius()*2 < (0.65*system.getCellDiameter() )){
+			system.getBud().setaRadius(system.getBud().getaRadius() + (1e-6 * system.getPForce().getValue()));
+			system.getBud().setYTranspose(system.getBud().getYTranspose() + 0.1);
+		}
+		
+		
+		
+		double k = system.getK();
+		double b = system.getB();
+		List<Particle> budInnerMembrane = new LinkedList<Particle>();
+		List<Particle> budOuterMembrane = new LinkedList<Particle>();
+		BudParticle pF;
+		//Coordinates of the center of the window
+		int x0 = (int) (simsize.width / 2.0);
+		int y0 = (int) (simsize.height / 2.0) + 100;
+
+		
+		//Part Creating my ellipse
+		int counter = 0;
+		//PI/14 = 0.2244
+		double RadiusDividerForPIDivider = 5.0;
+		double numberOfBudParticles = ((system.getBud().getaRadius()+20)/RadiusDividerForPIDivider) + 2;
+		double angle = Math.PI/numberOfBudParticles;
+		for(double t = 0; t < (2*Math.PI-angle); t = t + angle){
+			counter++;
+			if(counter > (numberOfBudParticles-12) && counter < 14){
+				continue;
+			}
+			double B = system.getBud().getaRadius() * 2;
+			double A = system.getBud().getaRadius() * 2;
+			int x = (int)(A*Math.cos(t));
+			int y = (int)(B*Math.sin(t));
+			//Creating my particles at the wanted position
+			pF = new BudParticle(x+x0,(y+y0)-system.getBud().getYTranspose(), 0, 0);
+			pF.pinned = true;
+			//Addind those particles to the list
+			budInnerMembrane.add(pF);	
+		}
+		
+		counter = 0;
+		for(double t = 0; t < (2*Math.PI-angle); t = t + angle){
+			counter++;
+			if(counter > (numberOfBudParticles-12) && counter < 14){
+				continue;
+			}
+			double B = system.getBud().getaRadius() * 2 + 20;
+			double A = system.getBud().getaRadius() * 2 + 20;
+
+			int x = (int)(A*Math.cos(t));
+			int y = (int)(B*Math.sin(t));
+			//Creating my particles at the wanted position
+			pF = new BudParticle(x+x0,(y+y0)-system.getBud().getYTranspose(), 0, 0);
+			pF.pinned = true;
+			//Addind those particles to the list
+
+			budOuterMembrane.add(pF);	
+			
+		}
+		system.springs.add(new BudSpring(budOuterMembrane.get(budOuterMembrane.size()-1),budInnerMembrane.get(0),k,b));
+		system.springs.add(new BudSpring(budOuterMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+		system.springs.add(new BudSpring(budInnerMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+		system.springs.add(new BudSpring(budOuterMembrane.get(budOuterMembrane.size()-1),budOuterMembrane.get(0),k,b));
+		
+		for(int i = 0; i < budOuterMembrane.size(); i++){
+			system.springs.add(new BudSpring(budOuterMembrane.get(i),budInnerMembrane.get(i),k,b));
+			if(i+1 < budOuterMembrane.size() && (i!=(int)(numberOfBudParticles-13))){
+				system.springs.add(new BudSpring(budOuterMembrane.get(i),budOuterMembrane.get(i+1),k,b));
+				system.springs.add(new BudSpring(budInnerMembrane.get(i),budInnerMembrane.get(i+1),k,b));
+			}
+			if(i+1 < budInnerMembrane.size() && (i!=(int)(numberOfBudParticles-13))){
+				system.springs.add(new BudSpring(budOuterMembrane.get(i),budInnerMembrane.get(i+1),k,b));
+			}
+			if(i+1 < budOuterMembrane.size() && (i!=(int)(numberOfBudParticles-13))){
+				system.springs.add(new BudSpring(budOuterMembrane.get(i+1),budInnerMembrane.get(i),k,b));
+			}
+		}
+		
+		
+		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(48),budOuterMembrane.get((int)(numberOfBudParticles-12)),k,b));
+		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(48),budInnerMembrane.get((int)(numberOfBudParticles-12)),k,b));
+		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(47),budOuterMembrane.get((int)(numberOfBudParticles-12)),k,b));
+		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(47),budInnerMembrane.get((int)(numberOfBudParticles-12)),k,b));
+		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(49),budOuterMembrane.get((int)(numberOfBudParticles-13)),k,b));
+		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(49),budInnerMembrane.get((int)(numberOfBudParticles-13)),k,b));
+		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(50),budOuterMembrane.get((int)(numberOfBudParticles-13)),k,b));
+		system.springs.add(new BudSpring(system.getMotherCell().getOuterMembraneParticles().get(50),budInnerMembrane.get((int)(numberOfBudParticles-13)),k,b));
+		
+		system.particles.addAll(budInnerMembrane);
+		system.particles.addAll(budOuterMembrane);
 	}
+	
 	
 	public JPanel getControls() {
         VerticalFlowPanel vfp = new VerticalFlowPanel();
@@ -299,12 +410,13 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				}
 				break;
 			case 3: // COMPLETE CELL
-				int yTranspose = 190;
+				
+				double yTranspose = system.getBud().getYTranspose();
 				List<Particle> budInnerMembrane = new LinkedList<Particle>();
 				List<Particle> budOuterMembrane = new LinkedList<Particle>();
 				List<Particle> innerMembrane = new LinkedList<Particle>();
 				List<Particle> outterMembrane = new LinkedList<Particle>();
-				Particle pF, pS;
+				Particle pF;
 				//Coordinates of the center of the window
 				int x0 = (int) (simsize.width / 2.0);
 				int y0 = (int) (simsize.height / 2.0) + 100;
@@ -314,67 +426,72 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				//Part Creating my ellipse
 				int counter = 0;
-				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+				double RadiusDividerForPIDivider = 5.0;
+				double numberOfBudParticles = ((system.getBud().getaRadius()+20)/RadiusDividerForPIDivider) + 2;
+				double angle = Math.PI/numberOfBudParticles;
+				for(double t = 0; t < (2*Math.PI); t = t + angle){
 					counter++;
-					if(counter > 4 && counter < 12){
+					if(counter > (numberOfBudParticles-12) && counter < 14){
 						continue;
 					}
-					double B = 80;
-					double A = 80;
+					double B = system.getBud().getaRadius() * 2;
+					double A = system.getBud().getaRadius() * 2;
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
-					pF = new Particle(x+x0,(y+y0)-yTranspose, 0, 0);
+					pF = new BudParticle(x+x0,(y+y0)-yTranspose, 0, 0);
 					pF.pinned = true;
 					//Addind those particles to the list
 					budInnerMembrane.add(pF);	
 				}
 				
 				counter = 0;
-				for(double t = 0; t <= (2*Math.PI); t = t + 0.2244){
+				for(double t = 0; t < (2*Math.PI); t = t + angle){
 					counter++;
-					if(counter > 4 && counter < 12){
+					if(counter > (numberOfBudParticles-12) && counter < 14){
 						continue;
 					}
-					double B = ((simsize.height/2)-200);
-					double A = 100.0;
+					double B = system.getBud().getaRadius() * 2 + 20;
+					double A = system.getBud().getaRadius() * 2 + 20;
+
 					int x = (int)(A*Math.cos(t));
 					int y = (int)(B*Math.sin(t));
 					//Creating my particles at the wanted position
-					pF = new Particle(x+x0,(y+y0)-yTranspose, 0, 0);
+					pF = new BudParticle(x+x0,(y+y0)-yTranspose, 0, 0);
 					pF.pinned = true;
 					//Addind those particles to the list
 
 					budOuterMembrane.add(pF);	
 					
 				}
-				springs.add(new Spring(budOuterMembrane.get(budOuterMembrane.size()-1),budInnerMembrane.get(0),k,b));
-				springs.add(new Spring(budOuterMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
-				springs.add(new Spring(budInnerMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
-				springs.add(new Spring(budOuterMembrane.get(budOuterMembrane.size()-1),budOuterMembrane.get(0),k,b));
+				springs.add(new BudSpring(budOuterMembrane.get(budOuterMembrane.size()-1),budInnerMembrane.get(0),k,b));
+				springs.add(new BudSpring(budOuterMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+				springs.add(new BudSpring(budInnerMembrane.get(0),budInnerMembrane.get(budInnerMembrane.size()-1),k,b));
+				springs.add(new BudSpring(budOuterMembrane.get(budOuterMembrane.size()-1),budOuterMembrane.get(0),k,b));
 				
 				for(int i = 0; i < budOuterMembrane.size(); i++){
-					springs.add(new Spring(budOuterMembrane.get(i),budInnerMembrane.get(i),k,b));
-					if(i+1 < budOuterMembrane.size() && (i!=3)){
-						springs.add(new Spring(budOuterMembrane.get(i),budOuterMembrane.get(i+1),k,b));
-						springs.add(new Spring(budInnerMembrane.get(i),budInnerMembrane.get(i+1),k,b));
+					springs.add(new BudSpring(budOuterMembrane.get(i),budInnerMembrane.get(i),k,b));
+					if(i+1 < budOuterMembrane.size() && (i!=1)){
+						springs.add(new BudSpring(budOuterMembrane.get(i),budOuterMembrane.get(i+1),k,b));
+						springs.add(new BudSpring(budInnerMembrane.get(i),budInnerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < budInnerMembrane.size() && (i!=3)){
-						springs.add(new Spring(budOuterMembrane.get(i),budInnerMembrane.get(i+1),k,b));
+					if(i+1 < budInnerMembrane.size() && (i!=1)){
+						springs.add(new BudSpring(budOuterMembrane.get(i),budInnerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < budOuterMembrane.size() && (i!=3)){
-						springs.add(new Spring(budOuterMembrane.get(i+1),budInnerMembrane.get(i),k,b));
+					if(i+1 < budOuterMembrane.size() && (i!=1)){
+						springs.add(new BudSpring(budOuterMembrane.get(i+1),budInnerMembrane.get(i),k,b));
 					}
 				}
 				
 
-				//ACTUAL CELL
+				//ACTUAL Mother CELL
 				//INNER MEMBRANE
+				
 				counter = 0;
-				int yLower = 60;
+				double yLower = system.getBud().getYTranspose()-10.0;
 				for(double t = 0; t <= (2*Math.PI); t = t + 0.0924){
 					counter++;
-					if(counter > 47 && counter < 57){
+					if(counter > 49 && counter < 55){
 						continue;
 					}
 					double B = ((simsize.height/2)-95);
@@ -391,7 +508,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				counter = 0;
 				for(double t = 0; t <= (2*Math.PI); t = t + 0.0924){
 					counter++;
-					if(counter > 47 && counter < 57){
+					if(counter > 49 && counter < 55){
 						continue;
 					}
 					
@@ -415,37 +532,46 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				for(int i = 0; i < outterMembrane.size(); i++){
 					springs.add(new Spring(outterMembrane.get(i),innerMembrane.get(i),k,b));
-					if(i+1 < outterMembrane.size() && (i!=46)){
+					if(i+1 < outterMembrane.size() && (i!=48)){
 						springs.add(new Spring(outterMembrane.get(i),outterMembrane.get(i+1),k,b));
 						springs.add(new Spring(innerMembrane.get(i),innerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < innerMembrane.size() && (i!=46)){
+					if(i+1 < innerMembrane.size() && (i!=48)){
 						springs.add(new Spring(outterMembrane.get(i),innerMembrane.get(i+1),k,b));
 					}
-					if(i+1 < outterMembrane.size() && (i!=46)){
+					if(i+1 < outterMembrane.size() && (i!=48)){
 						springs.add(new Spring(outterMembrane.get(i+1),innerMembrane.get(i),k,b));
 					}
 				}
 				
-				springs.add(new Spring(outterMembrane.get(46),budOuterMembrane.get(5),k,b));
-				springs.add(new Spring(outterMembrane.get(46),budOuterMembrane.get(4),k,b));
-				springs.add(new Spring(innerMembrane.get(46),budOuterMembrane.get(5),k,b));
-				springs.add(new Spring(innerMembrane.get(46),budOuterMembrane.get(4),k,b));
+				springs.add(new BudSpring(outterMembrane.get(48),budOuterMembrane.get(2),k,b));
+				springs.add(new BudSpring(outterMembrane.get(48),budInnerMembrane.get(2),k,b));
+				springs.add(new BudSpring(outterMembrane.get(47),budOuterMembrane.get(2),k,b));
+				springs.add(new BudSpring(outterMembrane.get(47),budInnerMembrane.get(2),k,b));
+				springs.add(new BudSpring(outterMembrane.get(49),budOuterMembrane.get(1),k,b));
+				springs.add(new BudSpring(outterMembrane.get(49),budInnerMembrane.get(1),k,b));
+				springs.add(new BudSpring(outterMembrane.get(50),budOuterMembrane.get(1),k,b));
+				springs.add(new BudSpring(outterMembrane.get(50),budInnerMembrane.get(1),k,b));
+//				springs.add(new BudSpring(innerMembrane.get(48),budOuterMembrane.get(5),k,b));
+//				springs.add(new BudSpring(innerMembrane.get(48),budOuterMembrane.get(4),k,b));
 				
-				springs.add(new Spring(outterMembrane.get(47),budOuterMembrane.get(3),k,b));
-				springs.add(new Spring(outterMembrane.get(47),budOuterMembrane.get(2),k,b));
-				springs.add(new Spring(innerMembrane.get(47),budOuterMembrane.get(3),k,b));
-				springs.add(new Spring(innerMembrane.get(47),budOuterMembrane.get(2),k,b));
+//				springs.add(new BudSpring(outterMembrane.get(49),budOuterMembrane.get(3),k,b));
+//				springs.add(new BudSpring(outterMembrane.get(49),budOuterMembrane.get(2),k,b));
+//				springs.add(new BudSpring(innerMembrane.get(49),budOuterMembrane.get(3),k,b));
+//				springs.add(new BudSpring(innerMembrane.get(49),budOuterMembrane.get(2),k,b));
 
 				
 				//Putting my list of particles in this list which I guess is then drawn on the window
+				system.getMotherCell().setInnerMembraneParticles(innerMembrane);
+				system.getMotherCell().setOuterMembraneParticles(outterMembrane);
+				
 				particles.addAll(budInnerMembrane);
 				particles.addAll(budOuterMembrane);
 				particles.addAll(innerMembrane);
 				particles.addAll(outterMembrane);
 				
 				//NUCLEUS
-				yTranspose = 0;
+				yTranspose = system.getBud().getYTranspose() - 70;
 				List<Particle> innerNuc = new LinkedList<Particle>();
 				List<Particle> outerNuc = new LinkedList<Particle>();
 				
@@ -506,7 +632,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				particles.addAll(outerNuc);
 				
 				//outerNuc.get(21)
-				//budInnerMembrane.get(14)
+				//budInnerMembrane.get(10)
 				
 				//  the gap between subsequent particles in the chain
 				int stepSize = 10;
@@ -516,7 +642,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				int numberOfParticlesInChain = 16;
 				
-				Particle lastParticle = budInnerMembrane.get(14);		//  y-coordinate of attachment point
+				Particle lastParticle = budInnerMembrane.get(10);		//  y-coordinate of attachment point
 				double lastY = lastParticle.p.y;
 				
 				// TODO: set this in UI
@@ -1164,6 +1290,8 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
     	return run.getValue();
     }
 
+    
+    
 	@Override
 	public String getName() {
 		return "Particle Simulation";

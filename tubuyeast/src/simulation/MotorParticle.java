@@ -9,11 +9,11 @@ public class MotorParticle extends Particle {
 	}
     
     public void apply(double scale) {
-		Vector2d fp = new Vector2d(0, -scale);
+    	Vector2d fp = new Vector2d(0, -scale);
 //		this.f.set(fp);
 		addForce(fp);
     }
-
+    
 	public Vector2d direction;
     
     

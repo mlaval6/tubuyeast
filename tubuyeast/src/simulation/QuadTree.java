@@ -42,7 +42,9 @@ public class QuadTree {
 		return allParticles;
 	}
 	
-	
+	public void printBoxes(){
+		root.printBoxes();
+	}
 	
 }
 

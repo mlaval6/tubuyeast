@@ -223,8 +223,7 @@ public class ParticleSystem implements SceneGraphNode {
 		
 		//Create QuadTree
 		QuadTree qt = new QuadTree(particles, new Point2d(9, 747), new Point2d(792, 10));
-		
-		
+
 		//END OF MOHAMED'S CODE
 		
 		

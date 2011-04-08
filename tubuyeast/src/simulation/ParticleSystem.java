@@ -219,8 +219,14 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public void updateForces() {
 
+		//1. MOHAMED's CODE
+		
 		//Create QuadTree
 		QuadTree qt = new QuadTree(particles, new Point2d(9, 747), new Point2d(792, 10));
+		
+		
+		//END OF MOHAMED'S CODE
+		
 		
 		
 		// Initialize forces to the the gravity force (mg)
@@ -239,16 +245,16 @@ public class ParticleSystem implements SceneGraphNode {
 		
 		
 		// OLD COULOMB FORCES
-		/*for (Particle p1: particles) {
+	/*	for (Particle p1: particles) {
 			if (!p1.collidable) continue;
 			for (Particle p2: particles) {
 				if (p1 == p2 || !p2.collidable) continue;
 				
 				CoulombForce.apply(p1, p2);
 			}
-		}
 		*/
 		
+		// 2. MOHAMED's CODE - if you want to test without it, comment and above OLD COULOMB FORCES
 		for (Particle p1: particles) {
 			if (!p1.collidable) continue;
 			ArrayList<Particle> closeParticles = qt.getParticles(p1, 60);
@@ -258,6 +264,8 @@ public class ParticleSystem implements SceneGraphNode {
 				CoulombForce.apply(p1, p2);
 			}
 		}
+		// END OF MOHAMED's CODE
+		
 		
 		
 		// Add pulling to motor proteins

@@ -44,13 +44,17 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public ArrayList<Particle> particles = new ArrayList<Particle>();
 
-	private Bud bud = new Bud(50);
+	private Bud bud = new Bud();
+	
+	private MotherCell MC = new MotherCell();
+	
+	private double cellDiameter = 205.0;
 	
 	//private int budDiameter = 80;
 	
 	//private ArrayList<Particle> budParticles = new ArrayList<Particle>();
 	
-	private List<Spring> springs = new LinkedList<Spring>();
+	public List<Spring> springs = new LinkedList<Spring>();
 	
 	
 
@@ -106,7 +110,7 @@ public class ParticleSystem implements SceneGraphNode {
 		integrationMethod = integrationMethods.get(method);
 
 	}
-
+	
 	/**
 	 * Updates the system.
 	 * 
@@ -114,7 +118,7 @@ public class ParticleSystem implements SceneGraphNode {
 	 */
 	public void step(double h) {
 
-		//BUD GROWING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		
 		
 		updateForces();
 		
@@ -466,6 +470,24 @@ public class ParticleSystem implements SceneGraphNode {
 	public double getB() {
 		return b.getValue();
 	}
+	
+	public Bud getBud(){
+		return bud;
+	}
+	
+	public double getCellDiameter(){
+		return cellDiameter;
+	}
+	
+	public MotherCell getMotherCell(){
+		return MC;
+	}
+	
+	public DoubleParameter getPForce(){
+		return pforce;
+	}
+	
+	
 	
 	
 	

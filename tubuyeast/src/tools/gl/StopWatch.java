@@ -101,12 +101,18 @@ public class StopWatch
         }
         formatter.setMinimumIntegerDigits(6);
         formatter.setMaximumIntegerDigits(6);
+        
+        // Number of laps
         String nStr = formatter.format(n);
         formatter.setMinimumIntegerDigits(11);
         formatter.setMaximumIntegerDigits(11);
+        
+        // Total lap time accumulated so far
         String totalStr = formatter.format(total);
         formatter.setMinimumIntegerDigits(7);
         formatter.setMaximumIntegerDigits(7);
+        
+        // Average time per lap
         String avgStr = formatter.format(avg);
         return
             nameStr + " | " + nStr + "  " +

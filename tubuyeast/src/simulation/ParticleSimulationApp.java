@@ -18,6 +18,9 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.vecmath.Point2d;
 import javax.vecmath.Vector2d;
+
+import com.sun.opengl.util.GLUT;
+
 import tools.computations.FPSTimer;
 import tools.gl.SceneGraphNode;
 import tools.gl.Interactor;
@@ -127,8 +130,11 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
         fpsTimer.tick();
         String text = system.toString() + "\n" + 
                       "h = " + stepsize.getValue() + "\n" +
-                      "substeps = " + (int) substeps.getValue() + "\n" + fpsTimer.toString();        
+                      "substeps = " + (int) substeps.getValue();   
+        text += "\n" + system.swt.toString();
         OpenglViewer.printTextLines( drawable, text );
+        
+        OpenglViewer.printTextLines(drawable, fpsTimer.toString(), wsize.getWidth() - 70, 30,  new float[] { 1, 1, 0, 0}, GLUT.BITMAP_HELVETICA_18 );
 	}
 
 	private void simulationStep() {

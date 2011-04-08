@@ -409,6 +409,8 @@ public class ParticleSystem implements SceneGraphNode {
 							wsize.getWidth(), wsize.getHeight()));
 		}
 		
+		
+		/*** COMMENT IF YOU DONT WANT TO SEE QUADTREE ***/
 		if(qt != null)	qt.printBoxes(drawable);
 		
 	}

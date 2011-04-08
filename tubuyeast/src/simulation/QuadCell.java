@@ -1,5 +1,8 @@
 package simulation;
 import java.util.ArrayList;
+
+import javax.media.opengl.GL;
+import javax.media.opengl.GLAutoDrawable;
 import javax.vecmath.Point2d;
 
 public class QuadCell {
@@ -143,22 +146,31 @@ public class QuadCell {
 		return;
 	}
 	
-	public void printBoxes(){
+	public void printBoxes(GLAutoDrawable drawable){
+		GL gl = drawable.getGL();
+		
+		gl.glBegin(GL.GL_LINE_LOOP);
+		gl.glVertex3d(this.pll.x, this.pur.y, 0);
+		gl.glVertex3d(this.pur.x, this.pur.y, 0);
+		gl.glVertex3d(this.pur.x, this.pll.y, 0);
+		gl.glVertex3d(this.pll.x, this.pll.y, 0);
+		gl.glEnd();
+		
 		//print own coordinates
-		System.out.println(this.pll.x + "\t" + this.pll.y);
-		System.out.println(this.pur.x + "\t" + this.pll.y);
-		System.out.println(this.pur.x + "\t" + this.pur.y);
-		System.out.println(this.pll.x + "\t" + this.pur.y);
+		//System.out.println(this.pll.x + "\t" + this.pll.y);
+		//System.out.println(this.pur.x + "\t" + this.pll.y);
+		//System.out.println(this.pur.x + "\t" + this.pur.y);
+		//System.out.println(this.pll.x + "\t" + this.pur.y);
 		
 		if(this.leaf == true){
 			return;
 		}
 		else{
 			//print in all 4 directions if direction not null
-			if(this.SW != null) this.SW.printBoxes();
-			if(this.SE != null) this.SE.printBoxes();
-			if(this.NE != null) this.NE.printBoxes();
-			if(this.NW != null) this.NW.printBoxes();
+			if(this.SW != null) this.SW.printBoxes(drawable);
+			if(this.SE != null) this.SE.printBoxes(drawable);
+			if(this.NE != null) this.NE.printBoxes(drawable);
+			if(this.NW != null) this.NW.printBoxes(drawable);
 		}
 		
 	}

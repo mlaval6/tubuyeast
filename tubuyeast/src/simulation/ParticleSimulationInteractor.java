@@ -119,7 +119,7 @@ public class ParticleSimulationInteractor implements Interactor {
                         }
                         
                         if (creationEnabled) {
-                            for ( Spring s : p1.springs ) {
+                            for ( LinearSpring s : p1.springs ) {
                                 s.computeRestLength();
                             }
                         }
@@ -378,7 +378,7 @@ public class ParticleSimulationInteractor implements Interactor {
 			// Find the strongest spring attached to this particle
 			double ks = 0;
 			double kd = 0;
-			for (Spring s : p.springs) {
+			for (LinearSpring s : p.springs) {
 				if (s.getK() > ks) ks = s.getK();
 				if (s.getB() > kd) kd = s.getB();
 			}

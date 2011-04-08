@@ -83,7 +83,7 @@ public class Particle implements Serializable {
      * A list of springs to which this particle is attached
      * (currently unused, but perhaps of future use)
      */
-    public ArrayList<Spring> springs = new ArrayList<Spring>();
+    public ArrayList<LinearSpring> springs = new ArrayList<LinearSpring>();
 
     /**
      * An index representing this particle. Set to zero initially.

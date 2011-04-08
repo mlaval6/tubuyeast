@@ -69,6 +69,9 @@ public class ParticleSystem implements SceneGraphNode {
 	private DoubleParameter k = new DoubleParameter("stiffness", 10000, 0.001,
 			100000);
 
+	private DoubleParameter ak = new DoubleParameter("angular stiffness", 0.001, 0.001,
+			100000);
+
 	private DoubleParameter pforce = new DoubleParameter("pulling force (N)", 25000, -1e6,
 			1e6);
 
@@ -242,7 +245,6 @@ public class ParticleSystem implements SceneGraphNode {
 			spring.apply();
 		}
 		
-		
 		// OLD COULOMB FORCES
 	/*	for (Particle p1: particles) {
 			if (!p1.collidable) continue;
@@ -322,8 +324,8 @@ public class ParticleSystem implements SceneGraphNode {
 	 * @param p2
 	 * @return the new spring
 	 */
-	public Spring createSpring(Particle p1, Particle p2) {
-		Spring s = new Spring(p1, p2, k.getValue(), b.getValue());
+	public LinearSpring createSpring(Particle p1, Particle p2) {
+		LinearSpring s = new LinearSpring(p1, p2, k.getValue(), b.getValue());
 		springs.add(s);
 		return s;
 	}
@@ -397,6 +399,7 @@ public class ParticleSystem implements SceneGraphNode {
 		vfp.add(pforce.getSliderControls());
 		vfp.add(q.getSliderControls());
 		vfp.add(k.getSliderControls());
+		vfp.add(ak.getSliderControls());
 		vfp.add(b.getSliderControls());
 
 		// Update spring constant when necessary
@@ -411,6 +414,19 @@ public class ParticleSystem implements SceneGraphNode {
 		};
 		k.addParameterListener(springl);
 		b.addParameterListener(springl);
+
+		// Update spring constant when necessary
+		ParameterListener springal = new ParameterListener() {
+			@Override
+			public void parameterChanged(Parameter parameter) {
+				for (Spring spring : springs) {
+					if (spring instanceof AngularSpring) {
+						spring.setK(ak.getValue());
+					}
+				}
+			}
+		};
+		ak.addParameterListener(springal);
 
 		// Update electrical constant when necessary
 		ParameterListener el = new ParameterListener() {
@@ -502,4 +518,8 @@ public class ParticleSystem implements SceneGraphNode {
 	
 	
 	
+	public double getAK() {
+		return ak.getValue();
+	}
+
 }

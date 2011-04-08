@@ -1,18 +1,14 @@
 package numerical;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.vecmath.Vector2d;
 
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrices;
 import no.uib.cipr.matrix.Vector;
-import no.uib.cipr.matrix.Matrix.Norm;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import no.uib.cipr.matrix.sparse.FlexCompRowMatrix;
+import simulation.LinearSpring;
 import simulation.Particle;
 import simulation.ParticleSystem;
 import simulation.Spring;
@@ -68,12 +64,15 @@ public class ImplicitEuler implements Integrator {
 		}
 
 		for (Spring s : system.getSprings()) {
-			p1 = s.p1.index;
-			p2 = s.p2.index;
+			
+			if (s instanceof LinearSpring) {
+				LinearSpring ls = (LinearSpring) s;
+				p1 = ls.p1.index;
+				p2 = ls.p2.index;
 
-			connections.get(p1).add(p2);
-			connections.get(p2).add(p1);
-
+				connections.get(p1).add(p2);
+				connections.get(p2).add(p1);
+			}
 		}
 
 		// nz Goal: for each row (three per particle), add column index if it's

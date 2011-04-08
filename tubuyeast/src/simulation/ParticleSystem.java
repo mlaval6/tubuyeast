@@ -20,6 +20,8 @@ import numerical.RungeKutta;
 import numerical.VelocityIndependentVerlet;
 import numerical.VelocityVerlet;
 import tools.gl.SceneGraphNode;
+import tools.gl.StopWatch;
+import tools.gl.StopWatchTree;
 import tools.parameters.DoubleParameter;
 import tools.parameters.IntParameter;
 import tools.parameters.Parameter;
@@ -88,6 +90,22 @@ public class ParticleSystem implements SceneGraphNode {
 
 	private ListComboBox<Integrator> integrationMethodsComboBox;
 
+	private double time = 0;
+
+	/**
+	 * The integrator
+	 */
+	public Integrator integrationMethod = null;
+
+	public StopWatchTree swt = new StopWatchTree();
+	private StopWatch swQT;
+	private StopWatch swQTcreate;
+	private StopWatch swQTcoulomb;
+	private StopWatch swUpdateForces;
+	private StopWatch swStep;
+	private StopWatch swCollisions;
+	private StopWatch swIntegrate;
+	
 	/**
 	 * Create an empty particle system
 	 * 
@@ -111,7 +129,15 @@ public class ParticleSystem implements SceneGraphNode {
 		int method = 4;
 		integrationMethodsComboBox.setSelected(method);
 		integrationMethod = integrationMethods.get(method);
+		
+		swQT = swt.addStopWatch("Quad tree", "");
+		swQTcreate = swt.addStopWatch("creation", "Quad tree");
+		swQTcoulomb = swt.addStopWatch("Coulomb", "Quad tree");
 
+		swStep = swt.addStopWatch("System step", "");
+		swUpdateForces = swt.addStopWatch("update forces", "System step");
+		swCollisions = swt.addStopWatch("collisions", "System step");
+		swIntegrate = swt.addStopWatch("integration", "System step");
 	}
 	
 	/**
@@ -120,13 +146,32 @@ public class ParticleSystem implements SceneGraphNode {
 	 * @param h
 	 */
 	public void step(double h) {
-
+		swStep.start();
 		
-		
+		swUpdateForces.start();
 		updateForces();
+		swUpdateForces.stop();
 		
+		swCollisions.start();
+		collide(h);
+		swCollisions.stop();
+
+		// Integrates the system
+		swIntegrate.start();
+		integrationMethod.step(time, h, numIterations.getValue());
+		swIntegrate.stop();
 		
+		// Apply simple box-wall collision
+		// TODO: implement constraints in conjugate gradient
+//		BoxCollider.collide(wsize.getWidth(), wsize.getHeight(), rc.getValue(),
+//				particles);
+
+		time = time + h;
 		
+		swStep.stop();
+	}
+	
+	private void collide(double h) {
 		// Collide particles
 		for (Particle p : particles) {
 			if (p instanceof MotorParticle || !p.collidable) {
@@ -141,16 +186,6 @@ public class ParticleSystem implements SceneGraphNode {
 				s.intersect(p, h);
 			}
 		}		
-
-		// Integrates the system
-		integrationMethod.step(time, h, numIterations.getValue());
-
-		// Apply simple box-wall collision
-		// TODO: implement constraints in conjugate gradient
-//		BoxCollider.collide(wsize.getWidth(), wsize.getHeight(), rc.getValue(),
-//				particles);
-
-		time = time + h;
 	}
 
 	/**
@@ -210,27 +245,11 @@ public class ParticleSystem implements SceneGraphNode {
 		updateSystem();
 	}
 
-	private double time = 0;
-
-	/**
-	 * The integrator
-	 */
-	public Integrator integrationMethod = null;
-
 	/**
 	 * Updates the current forces
 	 */
 	public void updateForces() {
 
-		//1. MOHAMED's CODE
-		
-		//Create QuadTree
-		QuadTree qt = new QuadTree(particles, new Point2d(9, 747), new Point2d(792, 10));
-
-		//END OF MOHAMED'S CODE
-		
-		
-		
 		// Initialize forces to the the gravity force (mg)
 		Vector2d fg = g.isChecked() ? new Vector2d(0, g.getValue())
 				: new Vector2d();
@@ -239,11 +258,16 @@ public class ParticleSystem implements SceneGraphNode {
 			p.f.scale(p.mass);
 
 		}
+
+		//1. MOHAMED's CODE
 		
-		// Computes and adds the spring forces
-		for (Spring spring : springs) {
-			spring.apply();
-		}
+		swQT.start();
+		
+		//Create QuadTree
+		swQTcreate.start();
+		QuadTree qt = new QuadTree(particles, new Point2d(9, 747), new Point2d(792, 10));
+		swQTcreate.stop();
+		//END OF MOHAMED'S CODE
 		
 		// OLD COULOMB FORCES
 	/*	for (Particle p1: particles) {
@@ -259,6 +283,7 @@ public class ParticleSystem implements SceneGraphNode {
 		
 		
 		// 2. MOHAMED's CODE - if you want to test without it, comment and above OLD COULOMB FORCES
+		swQTcoulomb.start();
 		for (Particle p1: particles) {
 			if (!p1.collidable) continue;
 			ArrayList<Particle> closeParticles = qt.getParticles(p1, 60);
@@ -268,9 +293,15 @@ public class ParticleSystem implements SceneGraphNode {
 				CoulombForce.apply(p1, p2);
 			}
 		}
+		swQTcoulomb.stop();
+		swQT.stop();
 		// END OF MOHAMED's CODE
 		
 		
+		// Computes and adds the spring forces
+		for (Spring spring : springs) {
+			spring.apply();
+		}
 		
 		// Add pulling to motor proteins
 		for (Particle p: particles) {

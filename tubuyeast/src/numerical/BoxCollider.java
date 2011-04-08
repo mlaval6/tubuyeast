@@ -7,8 +7,8 @@ import simulation.Particle;
 public class BoxCollider {
 
     // Offset to the boundary
-    public static int WDX = 10;
-    public static int WDY = 10;
+    public static int WDX = 4;
+    public static int WDY = 4;
 
 	public static void collide(double boxwidth, double boxheight, double rcv, List<Particle> particles) {
         for ( Particle p : particles ) {

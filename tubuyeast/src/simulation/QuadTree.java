@@ -1,5 +1,7 @@
 package simulation;
 import java.util.ArrayList;
+
+import javax.media.opengl.GLAutoDrawable;
 import javax.vecmath.Point2d;
 
 public class QuadTree {
@@ -42,9 +44,11 @@ public class QuadTree {
 		return allParticles;
 	}
 	
-	public void printBoxes(){
-		root.printBoxes();
+	public void printBoxes(GLAutoDrawable drawable){
+		root.printBoxes(drawable);
 	}
+	
+	
 	
 }
 

@@ -143,6 +143,25 @@ public class QuadCell {
 		return;
 	}
 	
+	public void printBoxes(){
+		//print own coordinates
+		System.out.println(this.pll.x + "\t" + this.pll.y);
+		System.out.println(this.pur.x + "\t" + this.pll.y);
+		System.out.println(this.pur.x + "\t" + this.pur.y);
+		System.out.println(this.pll.x + "\t" + this.pur.y);
+		
+		if(this.leaf == true){
+			return;
+		}
+		else{
+			//print in all 4 directions if direction not null
+			if(this.SW != null) this.SW.printBoxes();
+			if(this.SE != null) this.SE.printBoxes();
+			if(this.NE != null) this.NE.printBoxes();
+			if(this.NW != null) this.NW.printBoxes();
+		}
+		
+	}
 	public void addChildParticle(Particle p){
 		this.child = p;
 	}

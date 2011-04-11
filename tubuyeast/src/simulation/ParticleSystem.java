@@ -411,7 +411,7 @@ public class ParticleSystem implements SceneGraphNode {
 		
 		
 		/*** COMMENT IF YOU DONT WANT TO SEE QUADTREE ***/
-		if(qt != null)	qt.printBoxes(drawable);
+		//if(qt != null)	qt.printBoxes(drawable);
 		
 	}
 

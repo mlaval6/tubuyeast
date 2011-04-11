@@ -74,7 +74,7 @@ public class ParticleSystem implements SceneGraphNode {
 	private DoubleParameter ak = new DoubleParameter("angular stiffness", 0.001, 0.001,
 			100000);
 
-	private DoubleParameter pforce = new DoubleParameter("pulling force (N)", 40000, -1e6,
+	private DoubleParameter pforce = new DoubleParameter("pulling force (N)", 45000, -1e6,
 			1e6);
 
 	private DoubleParameter b = new DoubleParameter("damping", 100, 0, 1000);

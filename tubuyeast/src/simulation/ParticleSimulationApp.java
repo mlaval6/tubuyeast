@@ -173,7 +173,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 		
 		if(system.getBud().getaRadius()*2 < (0.65*system.getCellDiameter() )){
 			system.getBud().setaRadius(system.getBud().getaRadius() + (5e-7 * system.getPForce().getValue()));
-			system.getBud().setYTranspose(system.getBud().getYTranspose() + 0.05);
+			system.getBud().setYTranspose(system.getBud().getYTranspose() + 0.07);
 		}
 		
 		

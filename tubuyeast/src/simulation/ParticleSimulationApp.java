@@ -706,7 +706,7 @@ public class ParticleSimulationApp implements SceneGraphNode, Interactor  {
 				
 				int numberOfParticlesInMTchain = 8;
 				double distance = membraneAttachmentPoint.p.y - previousParticle.p.y;
-				double kForMTchain2 = k;
+				double kForMTchain2 = k/10.0;
 				double bForMTchain2 = b;
 				double stepSizeMTchain2 = distance / (double)numberOfParticlesInMTchain;
 				

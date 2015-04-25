@@ -1,0 +1,1 @@
+Investigation of the interaction between distributions of electrical charges on the cell membrane and microtubules during yeast mitosis. Course project for COMP762 at McGill University.
